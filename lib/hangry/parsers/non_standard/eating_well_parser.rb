@@ -12,7 +12,7 @@ module Hangry
         end
 
         def parse_name
-          recipe_ast.at_css("h3[itemprop='name']").content
+          recipe_ast&.at_css("h3[itemprop='name']")&.content
         end
 
         def parse_description
