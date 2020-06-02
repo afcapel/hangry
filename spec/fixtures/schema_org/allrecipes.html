@@ -6,14 +6,130 @@
 <head>
     <title>Roasted Vegetable and Couscous Salad Recipe - Allrecipes.com</title>
 
-<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/karma.bundled.js' async=true></script>
+
+<script>
+    function closeAndViewSite() {
+        // If they give consent
+        var itemToClose = document.getElementById("privacyNotification");
+        itemToClose.style.display = "none";
+
+        // Update cookie and set to true, show logged out version of site
+        setEuConsentCookieTo(true);
+
+        // Call onetrust with api endpoint
+        sendDataToWebApi(oneTrustSuccess, oneTrustError);
+    }
+
+    // Pass ID to the OneTrust DB, fire and forget
+    function sendDataToWebApi(successCallback, errorCallback) {
+        var userId = readCookieValue('globalTI_SID');
+        var http = new XMLHttpRequest();
+        var url = 'https://apps.allrecipes.com/v1/save-consent/' + "?userIdentifier=" + userId;
+
+        http.open('POST', url, true);   // 'true': call asynchronously
+        http.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        http.setRequestHeader('Ar-Secret', 'Ir0nCh3fMichiba');
+
+        http.onreadystatechange = function() {
+            if (http.readyState === 4 && http.status === 200) {
+                if (successCallback) {
+                    successCallback(http.responseText);
+                }
+            } else if (errorCallback && http.readyState === 4) {
+                errorCallback(http.statusText);
+            }
+        };
+
+        http.send();
+    }
+
+    function readCookieValue(cookieName) {
+        var cookieValueRegex = new RegExp('(?:(?:^|.*;\\s*)' + cookieName + '\\s*\\=\\s*([^;]*).*$)|^.*$');
+        var cookieValue = document.cookie.replace(cookieValueRegex, "$1");
+        return cookieValue;     // empty string, if cookie not found
+    }
+
+    function oneTrustSuccess(data) {
+        var jsonObj = JSON.parse(data);
+        var cookieName = 'euConsentId';
+        var expirationDate = new Date('9999-12-31');
+        var webUrl = document.domain.replace(/^.*(\.[^.]+\.\w+)/i, "$1");
+        var thiscookie = cookieName + '=' + jsonObj.userIdentification + '; expires=' + expirationDate.toUTCString() + '; domain=' + webUrl + '; path=/';
+        document.cookie = thiscookie;
+
+        // Update the footer DSAR link so that it picks up the new user Id.
+        // The footer DSAR link is not here in the overlay; it's on the underlying page.
+        var footerDsar = document.getElementById("footer_dsar");
+        if (footerDsar != null) {
+            var dsarUrl = "https://app-de.onetrust.com/app/#/webform/0c410d51-8e85-4308-9bb9-37c24a461ccb?";
+
+            var dsarUserId = readCookieValue("euConsentId");
+            if (!dsarUserId) {
+                dsarUserId = readCookieValue("globalTI_SID");
+            }
+            if (dsarUserId) {
+                dsarUrl += 'uid=' + dsarUserId + '&';
+            }
+
+            var siteDomain = document.domain.replace(/^.*\.([^.]+\.\w+)$/i, "$1");
+            dsarUrl += 'domain=' + siteDomain;
+
+            footerDsar.href = dsarUrl;
+        }
+    }
+
+    function oneTrustError(errorData) {
+        // If there is an error, change the cookie back.
+        setEuConsentCookieTo(false);
+        // Reveal any OneTrust error.
+        var errorMessage = document.createElement('div');
+        errorMessage.className = "eu-privacy-error";
+        errorMessage.innerHTML = errorData;
+        document.body.appendChild(errorMessage);
+    }
+
+    function setEuConsentCookieTo(trueOrFalse) {
+        var cookieName = 'euConsent';
+        var expirationDate = new Date('9999-12-31');
+        var webUrl = document.domain.replace(/^.*(\.[^.]+\.\w+)/i, "$1");
+        var thiscookie = cookieName + '=' + trueOrFalse + '; expires=' + expirationDate.toUTCString() + '; domain=' + webUrl + '; path=/';
+        document.cookie = thiscookie;
+    }
+
+</script>
+
+<article aria-label="notification" id="privacyNotification" class="privacy-notification">
+    <div class="privacy-notification__div">
+        <img alt="Allrecipes" class="privacy-notification__logo" height="36" src="https://secureimages.allrecipes.com/ar-images/ARlogoNew.svg" width="96">
+        <p class="privacy-notification__p">
+            Welcome! To bring you the best content on our sites and applications, Meredith partners with third party advertisers to serve digital ads, including personalized digital ads. Those advertisers use tracking technologies to collect information about your activity on our sites and applications and across the Internet and your other apps and devices.
+            <br /><br />
+            You always have the choice to experience our sites without personalized advertising based on your web browsing activity by visiting the <a href="http://optout.aboutads.info/?c=2#!/" target="_blank">DAA's Consumer Choice page</a>, the <a href="http://optout.networkadvertising.org/?c=1#!/" target="_blank">NAI's website</a>, and/or the <a href="http://www.youronlinechoices.com/" target="_blank">EU online choices page</a>, from each of your browsers or devices. To avoid personalized advertising based on your mobile app activity, you can install the <a href="http://www.aboutads.info/appchoices" target="_blank">DAA's AppChoices app here</a>. You can find much more information about your privacy choices in <a href="http://www.meredith.com/legal/eu-privacy" target="_blank">our privacy policy</a>. Even if you choose not to have your activity tracked by third parties for advertising services, you will still see non-personalized ads on our sites and applications.
+            <br /><br />
+            By clicking continue below and using our sites or applications, you agree that we and our third party advertisers can:
+        </p>
+        <ul class="privacy-notification__ul">
+            <li>transfer your data to the United States or other countries; and</li>
+            <li>process and share your data so that we and third parties may serve you with personalized ads, subject to your choices as described above and in <a href="http://www.meredith.com/legal/eu-privacy" target="_blank">our privacy policy</a>.</li>
+        </ul>
+        <div class="privacy-notification__footer">
+            <span onclick="closeAndViewSite()" class="btns-one-small continue">Continue</span>
+        </div>
+        
+        <a id="privacy-notification_dsar" class="dsar-link" href="" target="_blank" rel="noopener">EU Data Subject Requests</a>
+
+    </div>
+</article>
+
 
 
     <!--Make our website baseUrl available to the client-side code-->
     <script type="text/javascript">
         var AR = AR || {};
+
+        AR.segmentWriteKey = "RnmsxUrjIjM7W62olfjKgJrcsVlxe68V";
         AR.baseWebsiteUrl = 'https://www.allrecipes.com';
-    </script>
+window.dataLayer={"version":"1.0","pageInstanceId":"www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/","externalLinkId":"","page":{"pageInfo":{"pageId":"230347","pageName":"/recipe/230347/roasted-vegetable-and-couscous-salad/","destinationUrl":"https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/","sysEnv":"RD0003FFB3A329","variant":"Control","abTestName":"RDP_Video_Step","version":"20180608","issueDate":"06/02/2020 14:11:12","effectiveDate":"06/02/2020 14:11:12","domain":"www.allrecipes.com","parameters":{},"breadcrumbs":"Trusted Brands: Recipes and Tips,United Soybean Board"},"category":{"primaryCategory":"recipes","contentType":"recipe","subContentType":"","adZone":"","adKeys":"status=visitor;oid=;fit=0;r=230347;id=230347;k=[33,68,112,169,173,178,198,199,201,221,241,244,653,720]","contentSource":"420"},"attributes":{"contentId":"230347","title":"Roasted Vegetable and Couscous Salad","country":"USA"}},"event":[],"user":[{"analyticsId":"","segment":{"adStatus":"visitor","visitorType":"anonymous","loginStatus":"no"},"profile":[{"profileInfo":{"profileId":"0","loginType":"None"}}],"magFollower":false}],"newsletter":{"mailingId":"","mailingName":"","mailingDate":"","mailingLinkGroup":"","mailingLinkName":""}};    </script>
 
     <script type="text/javascript">
         //Remove Ref_Hub from session after first recipe visited
@@ -43,7 +159,7 @@
 
 
     
-    <link href='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/recipe-details-init-css.bundled.Css' rel='stylesheet'/>
+    <link href='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/recipe-details-init-css.bundled.Css' rel='stylesheet'/>
 
 
 
@@ -53,21 +169,22 @@
     <meta property="fb:app_id" content="66102450266" />
     <meta property="fb:pages" content="71158748377" />
 
-    <script type="text/javascript">window.NREUM||(NREUM={});NREUM.info = {"beacon":"bam.nr-data.net","errorBeacon":"bam.nr-data.net","licenseKey":"55db0cb698","applicationID":"117742538,90586318","transactionName":"YwABYUUDXUIABRZbCVpKIllbEFZSCBYHQTFRBxBcQwccYwQFC0IDdwoNQUUNX10EFExgA1gEF1BTIVxfFQMMRiRVCw1QRUoa","queueTime":0,"applicationTime":110,"agent":"","atts":""}</script><script type="text/javascript">(window.NREUM||(NREUM={})).loader_config={xpid:"XQ4OVVdaGwIBU1ZWBQQEXg=="};window.NREUM||(NREUM={}),__nr_require=function(t,e,n){function r(n){if(!e[n]){var o=e[n]={exports:{}};t[n][0].call(o.exports,function(e){var o=t[n][1][e];return r(o||e)},o,o.exports)}return e[n].exports}if("function"==typeof __nr_require)return __nr_require;for(var o=0;o<n.length;o++)r(n[o]);return r}({1:[function(t,e,n){function r(t){try{s.console&&console.log(t)}catch(e){}}var o,i=t("ee"),a=t(21),s={};try{o=localStorage.getItem("__nr_flags").split(","),console&&"function"==typeof console.log&&(s.console=!0,o.indexOf("dev")!==-1&&(s.dev=!0),o.indexOf("nr_dev")!==-1&&(s.nrDev=!0))}catch(c){}s.nrDev&&i.on("internal-error",function(t){r(t.stack)}),s.dev&&i.on("fn-err",function(t,e,n){r(n.stack)}),s.dev&&(r("NR AGENT IN DEVELOPMENT MODE"),r("flags: "+a(s,function(t,e){return t}).join(", ")))},{}],2:[function(t,e,n){function r(t,e,n,r,s){try{l?l-=1:o(s||new UncaughtException(t,e,n),!0)}catch(f){try{i("ierr",[f,c.now(),!0])}catch(d){}}return"function"==typeof u&&u.apply(this,a(arguments))}function UncaughtException(t,e,n){this.message=t||"Uncaught error with no additional information",this.sourceURL=e,this.line=n}function o(t,e){var n=e?null:c.now();i("err",[t,n])}var i=t("handle"),a=t(22),s=t("ee"),c=t("loader"),f=t("gos"),u=window.onerror,d=!1,p="nr@seenError",l=0;c.features.err=!0,t(1),window.onerror=r;try{throw new Error}catch(h){"stack"in h&&(t(13),t(12),"addEventListener"in window&&t(6),c.xhrWrappable&&t(14),d=!0)}s.on("fn-start",function(t,e,n){d&&(l+=1)}),s.on("fn-err",function(t,e,n){d&&!n[p]&&(f(n,p,function(){return!0}),this.thrown=!0,o(n))}),s.on("fn-end",function(){d&&!this.thrown&&l>0&&(l-=1)}),s.on("internal-error",function(t){i("ierr",[t,c.now(),!0])})},{}],3:[function(t,e,n){t("loader").features.ins=!0},{}],4:[function(t,e,n){function r(){M++,N=y.hash,this[u]=g.now()}function o(){M--,y.hash!==N&&i(0,!0);var t=g.now();this[h]=~~this[h]+t-this[u],this[d]=t}function i(t,e){E.emit("newURL",[""+y,e])}function a(t,e){t.on(e,function(){this[e]=g.now()})}var s="-start",c="-end",f="-body",u="fn"+s,d="fn"+c,p="cb"+s,l="cb"+c,h="jsTime",m="fetch",v="addEventListener",w=window,y=w.location,g=t("loader");if(w[v]&&g.xhrWrappable){var b=t(10),x=t(11),E=t(8),O=t(6),P=t(13),R=t(7),T=t(14),L=t(9),j=t("ee"),S=j.get("tracer");t(15),g.features.spa=!0;var N,M=0;j.on(u,r),j.on(p,r),j.on(d,o),j.on(l,o),j.buffer([u,d,"xhr-done","xhr-resolved"]),O.buffer([u]),P.buffer(["setTimeout"+c,"clearTimeout"+s,u]),T.buffer([u,"new-xhr","send-xhr"+s]),R.buffer([m+s,m+"-done",m+f+s,m+f+c]),E.buffer(["newURL"]),b.buffer([u]),x.buffer(["propagate",p,l,"executor-err","resolve"+s]),S.buffer([u,"no-"+u]),L.buffer(["new-jsonp","cb-start","jsonp-error","jsonp-end"]),a(T,"send-xhr"+s),a(j,"xhr-resolved"),a(j,"xhr-done"),a(R,m+s),a(R,m+"-done"),a(L,"new-jsonp"),a(L,"jsonp-end"),a(L,"cb-start"),E.on("pushState-end",i),E.on("replaceState-end",i),w[v]("hashchange",i,!0),w[v]("load",i,!0),w[v]("popstate",function(){i(0,M>1)},!0)}},{}],5:[function(t,e,n){function r(t){}if(window.performance&&window.performance.timing&&window.performance.getEntriesByType){var o=t("ee"),i=t("handle"),a=t(13),s=t(12),c="learResourceTimings",f="addEventListener",u="resourcetimingbufferfull",d="bstResource",p="resource",l="-start",h="-end",m="fn"+l,v="fn"+h,w="bstTimer",y="pushState",g=t("loader");g.features.stn=!0,t(8);var b=NREUM.o.EV;o.on(m,function(t,e){var n=t[0];n instanceof b&&(this.bstStart=g.now())}),o.on(v,function(t,e){var n=t[0];n instanceof b&&i("bst",[n,e,this.bstStart,g.now()])}),a.on(m,function(t,e,n){this.bstStart=g.now(),this.bstType=n}),a.on(v,function(t,e){i(w,[e,this.bstStart,g.now(),this.bstType])}),s.on(m,function(){this.bstStart=g.now()}),s.on(v,function(t,e){i(w,[e,this.bstStart,g.now(),"requestAnimationFrame"])}),o.on(y+l,function(t){this.time=g.now(),this.startPath=location.pathname+location.hash}),o.on(y+h,function(t){i("bstHist",[location.pathname+location.hash,this.startPath,this.time])}),f in window.performance&&(window.performance["c"+c]?window.performance[f](u,function(t){i(d,[window.performance.getEntriesByType(p)]),window.performance["c"+c]()},!1):window.performance[f]("webkit"+u,function(t){i(d,[window.performance.getEntriesByType(p)]),window.performance["webkitC"+c]()},!1)),document[f]("scroll",r,{passive:!0}),document[f]("keypress",r,!1),document[f]("click",r,!1)}},{}],6:[function(t,e,n){function r(t){for(var e=t;e&&!e.hasOwnProperty(u);)e=Object.getPrototypeOf(e);e&&o(e)}function o(t){s.inPlace(t,[u,d],"-",i)}function i(t,e){return t[1]}var a=t("ee").get("events"),s=t(24)(a,!0),c=t("gos"),f=XMLHttpRequest,u="addEventListener",d="removeEventListener";e.exports=a,"getPrototypeOf"in Object?(r(document),r(window),r(f.prototype)):f.prototype.hasOwnProperty(u)&&(o(window),o(f.prototype)),a.on(u+"-start",function(t,e){var n=t[1],r=c(n,"nr@wrapped",function(){function t(){if("function"==typeof n.handleEvent)return n.handleEvent.apply(n,arguments)}var e={object:t,"function":n}[typeof n];return e?s(e,"fn-",null,e.name||"anonymous"):n});this.wrapped=t[1]=r}),a.on(d+"-start",function(t){t[1]=this.wrapped||t[1]})},{}],7:[function(t,e,n){function r(t,e,n){var r=t[e];"function"==typeof r&&(t[e]=function(){var t=r.apply(this,arguments);return o.emit(n+"start",arguments,t),t.then(function(e){return o.emit(n+"end",[null,e],t),e},function(e){throw o.emit(n+"end",[e],t),e})})}var o=t("ee").get("fetch"),i=t(21);e.exports=o;var a=window,s="fetch-",c=s+"body-",f=["arrayBuffer","blob","json","text","formData"],u=a.Request,d=a.Response,p=a.fetch,l="prototype";u&&d&&p&&(i(f,function(t,e){r(u[l],e,c),r(d[l],e,c)}),r(a,"fetch",s),o.on(s+"end",function(t,e){var n=this;if(e){var r=e.headers.get("content-length");null!==r&&(n.rxSize=r),o.emit(s+"done",[null,e],n)}else o.emit(s+"done",[t],n)}))},{}],8:[function(t,e,n){var r=t("ee").get("history"),o=t(24)(r);e.exports=r,o.inPlace(window.history,["pushState","replaceState"],"-")},{}],9:[function(t,e,n){function r(t){function e(){c.emit("jsonp-end",[],p),t.removeEventListener("load",e,!1),t.removeEventListener("error",n,!1)}function n(){c.emit("jsonp-error",[],p),c.emit("jsonp-end",[],p),t.removeEventListener("load",e,!1),t.removeEventListener("error",n,!1)}var r=t&&"string"==typeof t.nodeName&&"script"===t.nodeName.toLowerCase();if(r){var o="function"==typeof t.addEventListener;if(o){var a=i(t.src);if(a){var u=s(a),d="function"==typeof u.parent[u.key];if(d){var p={};f.inPlace(u.parent,[u.key],"cb-",p),t.addEventListener("load",e,!1),t.addEventListener("error",n,!1),c.emit("new-jsonp",[t.src],p)}}}}}function o(){return"addEventListener"in window}function i(t){var e=t.match(u);return e?e[1]:null}function a(t,e){var n=t.match(p),r=n[1],o=n[3];return o?a(o,e[r]):e[r]}function s(t){var e=t.match(d);return e&&e.length>=3?{key:e[2],parent:a(e[1],window)}:{key:t,parent:window}}var c=t("ee").get("jsonp"),f=t(24)(c);if(e.exports=c,o()){var u=/[?&](?:callback|cb)=([^&#]+)/,d=/(.*)\.([^.]+)/,p=/^(\w+)(\.|$)(.*)$/,l=["appendChild","insertBefore","replaceChild"];f.inPlace(HTMLElement.prototype,l,"dom-"),f.inPlace(HTMLHeadElement.prototype,l,"dom-"),f.inPlace(HTMLBodyElement.prototype,l,"dom-"),c.on("dom-start",function(t){r(t[0])})}},{}],10:[function(t,e,n){var r=t("ee").get("mutation"),o=t(24)(r),i=NREUM.o.MO;e.exports=r,i&&(window.MutationObserver=function(t){return this instanceof i?new i(o(t,"fn-")):i.apply(this,arguments)},MutationObserver.prototype=i.prototype)},{}],11:[function(t,e,n){function r(t){var e=a.context(),n=s(t,"executor-",e),r=new f(n);return a.context(r).getCtx=function(){return e},a.emit("new-promise",[r,e],e),r}function o(t,e){return e}var i=t(24),a=t("ee").get("promise"),s=i(a),c=t(21),f=NREUM.o.PR;e.exports=a,f&&(window.Promise=r,["all","race"].forEach(function(t){var e=f[t];f[t]=function(n){function r(t){return function(){a.emit("propagate",[null,!o],i),o=o||!t}}var o=!1;c(n,function(e,n){Promise.resolve(n).then(r("all"===t),r(!1))});var i=e.apply(f,arguments),s=f.resolve(i);return s}}),["resolve","reject"].forEach(function(t){var e=f[t];f[t]=function(t){var n=e.apply(f,arguments);return t!==n&&a.emit("propagate",[t,!0],n),n}}),f.prototype["catch"]=function(t){return this.then(null,t)},f.prototype=Object.create(f.prototype,{constructor:{value:r}}),c(Object.getOwnPropertyNames(f),function(t,e){try{r[e]=f[e]}catch(n){}}),a.on("executor-start",function(t){t[0]=s(t[0],"resolve-",this),t[1]=s(t[1],"resolve-",this)}),a.on("executor-err",function(t,e,n){t[1](n)}),s.inPlace(f.prototype,["then"],"then-",o),a.on("then-start",function(t,e){this.promise=e,t[0]=s(t[0],"cb-",this),t[1]=s(t[1],"cb-",this)}),a.on("then-end",function(t,e,n){this.nextPromise=n;var r=this.promise;a.emit("propagate",[r,!0],n)}),a.on("cb-end",function(t,e,n){a.emit("propagate",[n,!0],this.nextPromise)}),a.on("propagate",function(t,e,n){this.getCtx&&!e||(this.getCtx=function(){if(t instanceof Promise)var e=a.context(t);return e&&e.getCtx?e.getCtx():this})}),r.toString=function(){return""+f})},{}],12:[function(t,e,n){var r=t("ee").get("raf"),o=t(24)(r),i="equestAnimationFrame";e.exports=r,o.inPlace(window,["r"+i,"mozR"+i,"webkitR"+i,"msR"+i],"raf-"),r.on("raf-start",function(t){t[0]=o(t[0],"fn-")})},{}],13:[function(t,e,n){function r(t,e,n){t[0]=a(t[0],"fn-",null,n)}function o(t,e,n){this.method=n,this.timerDuration=isNaN(t[1])?0:+t[1],t[0]=a(t[0],"fn-",this,n)}var i=t("ee").get("timer"),a=t(24)(i),s="setTimeout",c="setInterval",f="clearTimeout",u="-start",d="-";e.exports=i,a.inPlace(window,[s,"setImmediate"],s+d),a.inPlace(window,[c],c+d),a.inPlace(window,[f,"clearImmediate"],f+d),i.on(c+u,r),i.on(s+u,o)},{}],14:[function(t,e,n){function r(t,e){d.inPlace(e,["onreadystatechange"],"fn-",s)}function o(){var t=this,e=u.context(t);t.readyState>3&&!e.resolved&&(e.resolved=!0,u.emit("xhr-resolved",[],t)),d.inPlace(t,y,"fn-",s)}function i(t){g.push(t),h&&(x?x.then(a):v?v(a):(E=-E,O.data=E))}function a(){for(var t=0;t<g.length;t++)r([],g[t]);g.length&&(g=[])}function s(t,e){return e}function c(t,e){for(var n in t)e[n]=t[n];return e}t(6);var f=t("ee"),u=f.get("xhr"),d=t(24)(u),p=NREUM.o,l=p.XHR,h=p.MO,m=p.PR,v=p.SI,w="readystatechange",y=["onload","onerror","onabort","onloadstart","onloadend","onprogress","ontimeout"],g=[];e.exports=u;var b=window.XMLHttpRequest=function(t){var e=new l(t);try{u.emit("new-xhr",[e],e),e.addEventListener(w,o,!1)}catch(n){try{u.emit("internal-error",[n])}catch(r){}}return e};if(c(l,b),b.prototype=l.prototype,d.inPlace(b.prototype,["open","send"],"-xhr-",s),u.on("send-xhr-start",function(t,e){r(t,e),i(e)}),u.on("open-xhr-start",r),h){var x=m&&m.resolve();if(!v&&!m){var E=1,O=document.createTextNode(E);new h(a).observe(O,{characterData:!0})}}else f.on("fn-end",function(t){t[0]&&t[0].type===w||a()})},{}],15:[function(t,e,n){function r(t){var e=this.params,n=this.metrics;if(!this.ended){this.ended=!0;for(var r=0;r<d;r++)t.removeEventListener(u[r],this.listener,!1);if(!e.aborted){if(n.duration=a.now()-this.startTime,4===t.readyState){e.status=t.status;var i=o(t,this.lastSize);if(i&&(n.rxSize=i),this.sameOrigin){var c=t.getResponseHeader("X-NewRelic-App-Data");c&&(e.cat=c.split(", ").pop())}}else e.status=0;n.cbTime=this.cbTime,f.emit("xhr-done",[t],t),s("xhr",[e,n,this.startTime])}}}function o(t,e){var n=t.responseType;if("json"===n&&null!==e)return e;var r="arraybuffer"===n||"blob"===n||"json"===n?t.response:t.responseText;return h(r)}function i(t,e){var n=c(e),r=t.params;r.host=n.hostname+":"+n.port,r.pathname=n.pathname,t.sameOrigin=n.sameOrigin}var a=t("loader");if(a.xhrWrappable){var s=t("handle"),c=t(16),f=t("ee"),u=["load","error","abort","timeout"],d=u.length,p=t("id"),l=t(19),h=t(18),m=window.XMLHttpRequest;a.features.xhr=!0,t(14),f.on("new-xhr",function(t){var e=this;e.totalCbs=0,e.called=0,e.cbTime=0,e.end=r,e.ended=!1,e.xhrGuids={},e.lastSize=null,l&&(l>34||l<10)||window.opera||t.addEventListener("progress",function(t){e.lastSize=t.loaded},!1)}),f.on("open-xhr-start",function(t){this.params={method:t[0]},i(this,t[1]),this.metrics={}}),f.on("open-xhr-end",function(t,e){"loader_config"in NREUM&&"xpid"in NREUM.loader_config&&this.sameOrigin&&e.setRequestHeader("X-NewRelic-ID",NREUM.loader_config.xpid)}),f.on("send-xhr-start",function(t,e){var n=this.metrics,r=t[0],o=this;if(n&&r){var i=h(r);i&&(n.txSize=i)}this.startTime=a.now(),this.listener=function(t){try{"abort"===t.type&&(o.params.aborted=!0),("load"!==t.type||o.called===o.totalCbs&&(o.onloadCalled||"function"!=typeof e.onload))&&o.end(e)}catch(n){try{f.emit("internal-error",[n])}catch(r){}}};for(var s=0;s<d;s++)e.addEventListener(u[s],this.listener,!1)}),f.on("xhr-cb-time",function(t,e,n){this.cbTime+=t,e?this.onloadCalled=!0:this.called+=1,this.called!==this.totalCbs||!this.onloadCalled&&"function"==typeof n.onload||this.end(n)}),f.on("xhr-load-added",function(t,e){var n=""+p(t)+!!e;this.xhrGuids&&!this.xhrGuids[n]&&(this.xhrGuids[n]=!0,this.totalCbs+=1)}),f.on("xhr-load-removed",function(t,e){var n=""+p(t)+!!e;this.xhrGuids&&this.xhrGuids[n]&&(delete this.xhrGuids[n],this.totalCbs-=1)}),f.on("addEventListener-end",function(t,e){e instanceof m&&"load"===t[0]&&f.emit("xhr-load-added",[t[1],t[2]],e)}),f.on("removeEventListener-end",function(t,e){e instanceof m&&"load"===t[0]&&f.emit("xhr-load-removed",[t[1],t[2]],e)}),f.on("fn-start",function(t,e,n){e instanceof m&&("onload"===n&&(this.onload=!0),("load"===(t[0]&&t[0].type)||this.onload)&&(this.xhrCbStart=a.now()))}),f.on("fn-end",function(t,e){this.xhrCbStart&&f.emit("xhr-cb-time",[a.now()-this.xhrCbStart,this.onload,e],e)})}},{}],16:[function(t,e,n){e.exports=function(t){var e=document.createElement("a"),n=window.location,r={};e.href=t,r.port=e.port;var o=e.href.split("://");!r.port&&o[1]&&(r.port=o[1].split("/")[0].split("@").pop().split(":")[1]),r.port&&"0"!==r.port||(r.port="https"===o[0]?"443":"80"),r.hostname=e.hostname||n.hostname,r.pathname=e.pathname,r.protocol=o[0],"/"!==r.pathname.charAt(0)&&(r.pathname="/"+r.pathname);var i=!e.protocol||":"===e.protocol||e.protocol===n.protocol,a=e.hostname===document.domain&&e.port===n.port;return r.sameOrigin=i&&(!e.hostname||a),r}},{}],17:[function(t,e,n){function r(){}function o(t,e,n){return function(){return i(t,[f.now()].concat(s(arguments)),e?null:this,n),e?void 0:this}}var i=t("handle"),a=t(21),s=t(22),c=t("ee").get("tracer"),f=t("loader"),u=NREUM;"undefined"==typeof window.newrelic&&(newrelic=u);var d=["setPageViewName","setCustomAttribute","setErrorHandler","finished","addToTrace","inlineHit","addRelease"],p="api-",l=p+"ixn-";a(d,function(t,e){u[e]=o(p+e,!0,"api")}),u.addPageAction=o(p+"addPageAction",!0),u.setCurrentRouteName=o(p+"routeName",!0),e.exports=newrelic,u.interaction=function(){return(new r).get()};var h=r.prototype={createTracer:function(t,e){var n={},r=this,o="function"==typeof e;return i(l+"tracer",[f.now(),t,n],r),function(){if(c.emit((o?"":"no-")+"fn-start",[f.now(),r,o],n),o)try{return e.apply(this,arguments)}catch(t){throw c.emit("fn-err",[arguments,this,t],n),t}finally{c.emit("fn-end",[f.now()],n)}}}};a("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","),function(t,e){h[e]=o(l+e)}),newrelic.noticeError=function(t){"string"==typeof t&&(t=new Error(t)),i("err",[t,f.now()])}},{}],18:[function(t,e,n){e.exports=function(t){if("string"==typeof t&&t.length)return t.length;if("object"==typeof t){if("undefined"!=typeof ArrayBuffer&&t instanceof ArrayBuffer&&t.byteLength)return t.byteLength;if("undefined"!=typeof Blob&&t instanceof Blob&&t.size)return t.size;if(!("undefined"!=typeof FormData&&t instanceof FormData))try{return JSON.stringify(t).length}catch(e){return}}}},{}],19:[function(t,e,n){var r=0,o=navigator.userAgent.match(/Firefox[\/\s](\d+\.\d+)/);o&&(r=+o[1]),e.exports=r},{}],20:[function(t,e,n){function r(t,e){if(!o)return!1;if(t!==o)return!1;if(!e)return!0;if(!i)return!1;for(var n=i.split("."),r=e.split("."),a=0;a<r.length;a++)if(r[a]!==n[a])return!1;return!0}var o=null,i=null,a=/Version\/(\S+)\s+Safari/;if(navigator.userAgent){var s=navigator.userAgent,c=s.match(a);c&&s.indexOf("Chrome")===-1&&s.indexOf("Chromium")===-1&&(o="Safari",i=c[1])}e.exports={agent:o,version:i,match:r}},{}],21:[function(t,e,n){function r(t,e){var n=[],r="",i=0;for(r in t)o.call(t,r)&&(n[i]=e(r,t[r]),i+=1);return n}var o=Object.prototype.hasOwnProperty;e.exports=r},{}],22:[function(t,e,n){function r(t,e,n){e||(e=0),"undefined"==typeof n&&(n=t?t.length:0);for(var r=-1,o=n-e||0,i=Array(o<0?0:o);++r<o;)i[r]=t[e+r];return i}e.exports=r},{}],23:[function(t,e,n){e.exports={exists:"undefined"!=typeof window.performance&&window.performance.timing&&"undefined"!=typeof window.performance.timing.navigationStart}},{}],24:[function(t,e,n){function r(t){return!(t&&t instanceof Function&&t.apply&&!t[a])}var o=t("ee"),i=t(22),a="nr@original",s=Object.prototype.hasOwnProperty,c=!1;e.exports=function(t,e){function n(t,e,n,o){function nrWrapper(){var r,a,s,c;try{a=this,r=i(arguments),s="function"==typeof n?n(r,a):n||{}}catch(f){p([f,"",[r,a,o],s])}u(e+"start",[r,a,o],s);try{return c=t.apply(a,r)}catch(d){throw u(e+"err",[r,a,d],s),d}finally{u(e+"end",[r,a,c],s)}}return r(t)?t:(e||(e=""),nrWrapper[a]=t,d(t,nrWrapper),nrWrapper)}function f(t,e,o,i){o||(o="");var a,s,c,f="-"===o.charAt(0);for(c=0;c<e.length;c++)s=e[c],a=t[s],r(a)||(t[s]=n(a,f?s+o:o,i,s))}function u(n,r,o){if(!c||e){var i=c;c=!0;try{t.emit(n,r,o,e)}catch(a){p([a,n,r,o])}c=i}}function d(t,e){if(Object.defineProperty&&Object.keys)try{var n=Object.keys(t);return n.forEach(function(n){Object.defineProperty(e,n,{get:function(){return t[n]},set:function(e){return t[n]=e,e}})}),e}catch(r){p([r])}for(var o in t)s.call(t,o)&&(e[o]=t[o]);return e}function p(e){try{t.emit("internal-error",e)}catch(n){}}return t||(t=o),n.inPlace=f,n.flag=a,n}},{}],ee:[function(t,e,n){function r(){}function o(t){function e(t){return t&&t instanceof r?t:t?c(t,s,i):i()}function n(n,r,o,i){if(!p.aborted||i){t&&t(n,r,o);for(var a=e(o),s=m(n),c=s.length,f=0;f<c;f++)s[f].apply(a,r);var d=u[g[n]];return d&&d.push([b,n,r,a]),a}}function l(t,e){y[t]=m(t).concat(e)}function h(t,e){var n=y[t];if(n)for(var r=0;r<n.length;r++)n[r]===e&&n.splice(r,1)}function m(t){return y[t]||[]}function v(t){return d[t]=d[t]||o(n)}function w(t,e){f(t,function(t,n){e=e||"feature",g[n]=e,e in u||(u[e]=[])})}var y={},g={},b={on:l,addEventListener:l,removeEventListener:h,emit:n,get:v,listeners:m,context:e,buffer:w,abort:a,aborted:!1};return b}function i(){return new r}function a(){(u.api||u.feature)&&(p.aborted=!0,u=p.backlog={})}var s="nr@context",c=t("gos"),f=t(21),u={},d={},p=e.exports=o();p.backlog=u},{}],gos:[function(t,e,n){function r(t,e,n){if(o.call(t,e))return t[e];var r=n();if(Object.defineProperty&&Object.keys)try{return Object.defineProperty(t,e,{value:r,writable:!0,enumerable:!1}),r}catch(i){}return t[e]=r,r}var o=Object.prototype.hasOwnProperty;e.exports=r},{}],handle:[function(t,e,n){function r(t,e,n,r){o.buffer([t],r),o.emit(t,e,n)}var o=t("ee").get("handle");e.exports=r,r.ee=o},{}],id:[function(t,e,n){function r(t){var e=typeof t;return!t||"object"!==e&&"function"!==e?-1:t===window?0:a(t,i,function(){return o++})}var o=1,i="nr@id",a=t("gos");e.exports=r},{}],loader:[function(t,e,n){function r(){if(!E++){var t=x.info=NREUM.info,e=l.getElementsByTagName("script")[0];if(setTimeout(u.abort,3e4),!(t&&t.licenseKey&&t.applicationID&&e))return u.abort();f(g,function(e,n){t[e]||(t[e]=n)}),c("mark",["onload",a()+x.offset],null,"api");var n=l.createElement("script");n.src="https://"+t.agent,e.parentNode.insertBefore(n,e)}}function o(){"complete"===l.readyState&&i()}function i(){c("mark",["domContent",a()+x.offset],null,"api")}function a(){return O.exists&&performance.now?Math.round(performance.now()):(s=Math.max((new Date).getTime(),s))-x.offset}var s=(new Date).getTime(),c=t("handle"),f=t(21),u=t("ee"),d=t(20),p=window,l=p.document,h="addEventListener",m="attachEvent",v=p.XMLHttpRequest,w=v&&v.prototype;NREUM.o={ST:setTimeout,SI:p.setImmediate,CT:clearTimeout,XHR:v,REQ:p.Request,EV:p.Event,PR:p.Promise,MO:p.MutationObserver};var y=""+location,g={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",agent:"js-agent.newrelic.com/nr-spa-1099.min.js"},b=v&&w&&w[h]&&!/CriOS/.test(navigator.userAgent),x=e.exports={offset:s,now:a,origin:y,features:{},xhrWrappable:b,userAgent:d};t(17),l[h]?(l[h]("DOMContentLoaded",i,!1),p[h]("load",r,!1)):(l[m]("onreadystatechange",o),p[m]("onload",r)),c("mark",["firstbyte",s],null,"api");var E=0,O=t(23)},{}]},{},["loader",2,15,5,3,4]);</script>
+    <script type="text/javascript">window.NREUM||(NREUM={});NREUM.info = {"beacon":"bam.nr-data.net","errorBeacon":"bam.nr-data.net","licenseKey":"55db0cb698","applicationID":"161785443,90586318","transactionName":"YwABYUUDXUIABRZbCVpKIllbEFZSCBYHQTFRBxBcQwccYwQFC0IDdwoNQUUNX10EFExgA1gEF1BTIVxfFQMMRiRVCw1QRUoa","queueTime":0,"applicationTime":121,"agent":"","atts":""}</script><script type="text/javascript">(window.NREUM||(NREUM={})).loader_config={licenseKey:"55db0cb698",applicationID:"161785443"};window.NREUM||(NREUM={}),__nr_require=function(e,n,t){function r(t){if(!n[t]){var i=n[t]={exports:{}};e[t][0].call(i.exports,function(n){var i=e[t][1][n];return r(i||n)},i,i.exports)}return n[t].exports}if("function"==typeof __nr_require)return __nr_require;for(var i=0;i<t.length;i++)r(t[i]);return r}({1:[function(e,n,t){function r(){}function i(e,n,t){return function(){return o(e,[u.now()].concat(f(arguments)),n?null:this,t),n?void 0:this}}var o=e("handle"),a=e(4),f=e(5),c=e("ee").get("tracer"),u=e("loader"),s=NREUM;"undefined"==typeof window.newrelic&&(newrelic=s);var p=["setPageViewName","setCustomAttribute","setErrorHandler","finished","addToTrace","inlineHit","addRelease"],l="api-",d=l+"ixn-";a(p,function(e,n){s[n]=i(l+n,!0,"api")}),s.addPageAction=i(l+"addPageAction",!0),s.setCurrentRouteName=i(l+"routeName",!0),n.exports=newrelic,s.interaction=function(){return(new r).get()};var m=r.prototype={createTracer:function(e,n){var t={},r=this,i="function"==typeof n;return o(d+"tracer",[u.now(),e,t],r),function(){if(c.emit((i?"":"no-")+"fn-start",[u.now(),r,i],t),i)try{return n.apply(this,arguments)}catch(e){throw c.emit("fn-err",[arguments,this,e],t),e}finally{c.emit("fn-end",[u.now()],t)}}}};a("actionText,setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","),function(e,n){m[n]=i(d+n)}),newrelic.noticeError=function(e,n){"string"==typeof e&&(e=new Error(e)),o("err",[e,u.now(),!1,n])}},{}],2:[function(e,n,t){function r(e,n){var t=e.getEntries();t.forEach(function(e){"first-paint"===e.name?c("timing",["fp",Math.floor(e.startTime)]):"first-contentful-paint"===e.name&&c("timing",["fcp",Math.floor(e.startTime)])})}function i(e,n){var t=e.getEntries();t.length>0&&c("lcp",[t[t.length-1]])}function o(e){if(e instanceof s&&!l){var n,t=Math.round(e.timeStamp);n=t>1e12?Date.now()-t:u.now()-t,l=!0,c("timing",["fi",t,{type:e.type,fid:n}])}}if(!("init"in NREUM&&"page_view_timing"in NREUM.init&&"enabled"in NREUM.init.page_view_timing&&NREUM.init.page_view_timing.enabled===!1)){var a,f,c=e("handle"),u=e("loader"),s=NREUM.o.EV;if("PerformanceObserver"in window&&"function"==typeof window.PerformanceObserver){a=new PerformanceObserver(r),f=new PerformanceObserver(i);try{a.observe({entryTypes:["paint"]}),f.observe({entryTypes:["largest-contentful-paint"]})}catch(p){}}if("addEventListener"in document){var l=!1,d=["click","keydown","mousedown","pointerdown","touchstart"];d.forEach(function(e){document.addEventListener(e,o,!1)})}}},{}],3:[function(e,n,t){function r(e,n){if(!i)return!1;if(e!==i)return!1;if(!n)return!0;if(!o)return!1;for(var t=o.split("."),r=n.split("."),a=0;a<r.length;a++)if(r[a]!==t[a])return!1;return!0}var i=null,o=null,a=/Version\/(\S+)\s+Safari/;if(navigator.userAgent){var f=navigator.userAgent,c=f.match(a);c&&f.indexOf("Chrome")===-1&&f.indexOf("Chromium")===-1&&(i="Safari",o=c[1])}n.exports={agent:i,version:o,match:r}},{}],4:[function(e,n,t){function r(e,n){var t=[],r="",o=0;for(r in e)i.call(e,r)&&(t[o]=n(r,e[r]),o+=1);return t}var i=Object.prototype.hasOwnProperty;n.exports=r},{}],5:[function(e,n,t){function r(e,n,t){n||(n=0),"undefined"==typeof t&&(t=e?e.length:0);for(var r=-1,i=t-n||0,o=Array(i<0?0:i);++r<i;)o[r]=e[n+r];return o}n.exports=r},{}],6:[function(e,n,t){n.exports={exists:"undefined"!=typeof window.performance&&window.performance.timing&&"undefined"!=typeof window.performance.timing.navigationStart}},{}],ee:[function(e,n,t){function r(){}function i(e){function n(e){return e&&e instanceof r?e:e?c(e,f,o):o()}function t(t,r,i,o){if(!l.aborted||o){e&&e(t,r,i);for(var a=n(i),f=v(t),c=f.length,u=0;u<c;u++)f[u].apply(a,r);var p=s[y[t]];return p&&p.push([b,t,r,a]),a}}function d(e,n){h[e]=v(e).concat(n)}function m(e,n){var t=h[e];if(t)for(var r=0;r<t.length;r++)t[r]===n&&t.splice(r,1)}function v(e){return h[e]||[]}function g(e){return p[e]=p[e]||i(t)}function w(e,n){u(e,function(e,t){n=n||"feature",y[t]=n,n in s||(s[n]=[])})}var h={},y={},b={on:d,addEventListener:d,removeEventListener:m,emit:t,get:g,listeners:v,context:n,buffer:w,abort:a,aborted:!1};return b}function o(){return new r}function a(){(s.api||s.feature)&&(l.aborted=!0,s=l.backlog={})}var f="nr@context",c=e("gos"),u=e(4),s={},p={},l=n.exports=i();l.backlog=s},{}],gos:[function(e,n,t){function r(e,n,t){if(i.call(e,n))return e[n];var r=t();if(Object.defineProperty&&Object.keys)try{return Object.defineProperty(e,n,{value:r,writable:!0,enumerable:!1}),r}catch(o){}return e[n]=r,r}var i=Object.prototype.hasOwnProperty;n.exports=r},{}],handle:[function(e,n,t){function r(e,n,t,r){i.buffer([e],r),i.emit(e,n,t)}var i=e("ee").get("handle");n.exports=r,r.ee=i},{}],id:[function(e,n,t){function r(e){var n=typeof e;return!e||"object"!==n&&"function"!==n?-1:e===window?0:a(e,o,function(){return i++})}var i=1,o="nr@id",a=e("gos");n.exports=r},{}],loader:[function(e,n,t){function r(){if(!x++){var e=E.info=NREUM.info,n=d.getElementsByTagName("script")[0];if(setTimeout(s.abort,3e4),!(e&&e.licenseKey&&e.applicationID&&n))return s.abort();u(y,function(n,t){e[n]||(e[n]=t)}),c("mark",["onload",a()+E.offset],null,"api");var t=d.createElement("script");t.src="https://"+e.agent,n.parentNode.insertBefore(t,n)}}function i(){"complete"===d.readyState&&o()}function o(){c("mark",["domContent",a()+E.offset],null,"api")}function a(){return O.exists&&performance.now?Math.round(performance.now()):(f=Math.max((new Date).getTime(),f))-E.offset}var f=(new Date).getTime(),c=e("handle"),u=e(4),s=e("ee"),p=e(3),l=window,d=l.document,m="addEventListener",v="attachEvent",g=l.XMLHttpRequest,w=g&&g.prototype;NREUM.o={ST:setTimeout,SI:l.setImmediate,CT:clearTimeout,XHR:g,REQ:l.Request,EV:l.Event,PR:l.Promise,MO:l.MutationObserver};var h=""+location,y={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",agent:"js-agent.newrelic.com/nr-1169.min.js"},b=g&&w&&w[m]&&!/CriOS/.test(navigator.userAgent),E=n.exports={offset:f,now:a,origin:h,features:{},xhrWrappable:b,userAgent:p};e(1),e(2),d[m]?(d[m]("DOMContentLoaded",o,!1),l[m]("load",r,!1)):(d[v]("onreadystatechange",i),l[v]("onload",r)),c("mark",["firstbyte",f],null,"api");var x=0,O=e(6)},{}],"wrap-function":[function(e,n,t){function r(e){return!(e&&e instanceof Function&&e.apply&&!e[a])}var i=e("ee"),o=e(5),a="nr@original",f=Object.prototype.hasOwnProperty,c=!1;n.exports=function(e,n){function t(e,n,t,i){function nrWrapper(){var r,a,f,c;try{a=this,r=o(arguments),f="function"==typeof t?t(r,a):t||{}}catch(u){l([u,"",[r,a,i],f])}s(n+"start",[r,a,i],f);try{return c=e.apply(a,r)}catch(p){throw s(n+"err",[r,a,p],f),p}finally{s(n+"end",[r,a,c],f)}}return r(e)?e:(n||(n=""),nrWrapper[a]=e,p(e,nrWrapper),nrWrapper)}function u(e,n,i,o){i||(i="");var a,f,c,u="-"===i.charAt(0);for(c=0;c<n.length;c++)f=n[c],a=e[f],r(a)||(e[f]=t(a,u?f+i:i,o,f))}function s(t,r,i){if(!c||n){var o=c;c=!0;try{e.emit(t,r,i,n)}catch(a){l([a,t,r,i])}c=o}}function p(e,n){if(Object.defineProperty&&Object.keys)try{var t=Object.keys(e);return t.forEach(function(t){Object.defineProperty(n,t,{get:function(){return e[t]},set:function(n){return e[t]=n,n}})}),n}catch(r){l([r])}for(var i in e)f.call(e,i)&&(n[i]=e[i]);return n}function l(n){try{e.emit("internal-error",n)}catch(t){}}return e||(e=i),t.inPlace=u,t.flag=a,t}},{}]},{},["loader"]);</script>
 
 
 
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/apple-touch-icon-180x180-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/apple-touch-icon-152x152-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/apple-touch-icon-120x120-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114x114-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/apple-touch-icon-76x76-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72x72-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/apple-touch-icon-60x60-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/apple-touch-icon-precomposed.png">
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
-    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
-    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="apple-touch-icon-precomposed" sizes="192x192" href="/ar-favicon-192.png">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="/ar-favicon-180.png">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/ar-favicon-152.png">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/ar-favicon-120.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/ar-favicon-114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="96x96" href="/ar-favicon-96.png">
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/ar-favicon-76.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/ar-favicon-72.png">
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/ar-favicon-57.png">
+    <link rel="icon" type="image/png" href="/ar-favicon-114.png" sizes="114x114">
+    <link rel="icon" type="image/png" href="/ar-favicon-16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/ar-favicon-32.png" sizes="32x32">
     <meta name="msapplication-TileColor" content="#ffffff">
     <style>
     /*Critical Foft with DataUri*/
@@ -89,16 +206,18 @@
 </script>
 
 
-        <meta name="correlationId" content="28b0db57-e9d4-4d16-9015-5a318f523c94" />
-        <script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/segment-analytics.bundled.js' async=true></script>
+        <meta name="correlationId" content="e4e15cce-38cc-4471-8bef-4f2fde992562" />
+    <script src='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/segment-analytics.bundled.js' ></script>
 
+    <script type="text/javascript">
+        window.segment = {};
+        var segmentShim = new SegmentShim(dataLayer, window.segment);
+        window.segmentAnalytics.page(window.segment);
+    </script>
 
 </head>
 
-
-
-
-<!-- ARLOG SERVER: RD0003FFA86350 LOCAL_IP: 10.255.22.142 MERCH_KEY: MerchData_4_2_420_230347_***_68 -->
+<!-- ARLOG SERVER: RD0003FFB3A329 LOCAL_IP: 10.255.21.145 MERCH_KEY: MerchData_4_2_420_230347_GB_68 -->
 
 <body ng-app="allrecipes" data-scoby-impression='{"id": "230347", "eventType": "Allrecipes.Recipe.PageView", "eventCategory": "Page.View", "value": {"user": {"loginStatus":"no","visitorType":"anonymous"}}}'>
 
@@ -158,13 +277,14 @@
             <div id="docking-leaderboard-container" class="leaderboard-wrapper" data-ad-container-autocollapse>
                 <div class="docking-leaderboard-container">
                     
-                        <div id="div-gpt-leaderboard-fixed-1" data-tier="1" class="docking-leaderboard"></div>
+                    <div id="div-gpt-leaderboard-flex-1" data-tier="1" class="docking-leaderboard"></div>
                 </div>
             </div>
         <div class="site-content">
 
             <header class="header new-nav">
                 <div class="branch-journeys-top"></div>
+
                 <section class="magazine-bar">
     <ul class="magazine-bar__social">
         <li>Follow us on:</li>
@@ -188,7 +308,7 @@
         <li class="ar-logo-tab">
             <a href="https://www.allrecipes.com" data-header-link-tracking='{"label": "Brand Logo"}' aria-label="Allrecipes home page">
                 <div class="ar-logo" ng-click="setAnalyticsCookie('ARlogo')">
-<img alt="Allrecipes" height="36" src="https://secureimages.allrecipes.com/ar-images/ARlogo.svg" width="96" />                </div>
+<img alt="Allrecipes" height="27" src="https://secureimages.allrecipes.com/ar-images/ARlogoNew.svg" width="110" />                </div>
             </a>
         </li>
 
@@ -439,28 +559,28 @@
 
                     <ul class="browse-hubs__subcategories">
 <li>
-                                <a href="https://www.allrecipes.com/recipes/198/holidays-and-events/thanksgiving/" data-header-link-tracking='{"label": "Browse Recipes > Thanksgiving"}' ng-click="setAnalyticsCookie('browse|thanksgiving')" title="Thanksgiving Recipes">
-                                    Thanksgiving
+                                <a href="https://www.allrecipes.com/recipes/1641/holidays-and-events/fathers-day/" data-header-link-tracking='{"label": "Browse Recipes > Fathers Day"}' ng-click="setAnalyticsCookie('browse|father\u0027s day')" title="Father's Day Recipes">
+                                    Father&#39;s Day
                                 </a>
                             </li>
 <li>
-                                <a href="https://www.allrecipes.com/recipes/17185/everyday-cooking/entertaining/" data-header-link-tracking='{"label": "Browse Recipes > Friendsgiving"}' ng-click="setAnalyticsCookie('browse|friendsgiving')" title="Friendsgiving Recipes">
-                                    Friendsgiving
+                                <a href="https://www.allrecipes.com/recipes/191/holidays-and-events/4th-of-july/" data-header-link-tracking='{"label": "Browse Recipes > 4th of July"}' ng-click="setAnalyticsCookie('browse|4th of july')" title="4th of July Recipes">
+                                    4th of July
                                 </a>
                             </li>
 <li>
-                                <a href="https://www.allrecipes.com/recipes/190/holidays-and-events/hanukkah/" data-header-link-tracking='{"label": "Browse Recipes > Hanukkah Recipes"}' ng-click="setAnalyticsCookie('browse|hanukkah recipes')" title="Hanukkah Recipes">
-                                    Hanukkah Recipes
+                                <a href="https://www.allrecipes.com/recipes/630/everyday-cooking/seasonal/summer/" data-header-link-tracking='{"label": "Browse Recipes > Summer Recipes"}' ng-click="setAnalyticsCookie('browse|summer recipes')" title="Summer Recipes">
+                                    Summer Recipes
                                 </a>
                             </li>
 <li>
-                                <a href="https://www.allrecipes.com/recipes/187/holidays-and-events/christmas/" data-header-link-tracking='{"label": "Browse Recipes > Christmas"}' ng-click="setAnalyticsCookie('browse|christmas')" title="Christmas Recipes">
-                                    Christmas
+                                <a href="https://www.allrecipes.com/recipes/1640/holidays-and-events/labor-day/" data-header-link-tracking='{"label": "Browse Recipes > Labor Day"}' ng-click="setAnalyticsCookie('browse|labor day')" title="Labor Day Recipes">
+                                    Labor Day
                                 </a>
                             </li>
 <li>
-                                <a href="https://www.allrecipes.com/recipes/85/holidays-and-events/" data-header-link-tracking='{"label": "Browse Recipes > More Holidays & Events"}' ng-click="setAnalyticsCookie('browse|more holidays \u0026 events')" title="More Holidays & Events Recipes">
-                                    More Holidays &amp; Events
+                                <a href="https://www.allrecipes.com/recipes/85/holidays-and-events/" data-header-link-tracking='{"label": "Browse Recipes > More Holidays and Events"}' ng-click="setAnalyticsCookie('browse|more holidays and events')" title="More Holidays and Events Recipes">
+                                    More Holidays and Events
                                 </a>
                             </li>
                     </ul>
@@ -571,8 +691,8 @@
 
                     <ul class="browse-hubs__subcategories">
 <li>
-                                <a href="https://www.allrecipes.com/recipes/17235/everyday-cooking/allrecipes-magazine-recipes/" data-header-link-tracking='{"label": "Browse Recipes > Allrecipes Magazine Recipes"}' ng-click="setAnalyticsCookie('browse|allrecipes magazine recipes')" title="Allrecipes Magazine Recipes">
-                                    Allrecipes Magazine Recipes
+                                <a href="https://www.allrecipes.com/recipes/83/everyday-cooking/convenience-cooking/" data-header-link-tracking='{"label": "Browse Recipes > Quarantine Cooking"}' ng-click="setAnalyticsCookie('browse|quarantine cooking')" title="Quarantine Cooking Recipes">
+                                    Quarantine Cooking
                                 </a>
                             </li>
 <li>
@@ -581,8 +701,13 @@
                                 </a>
                             </li>
 <li>
-                                <a href="https://www.allrecipes.com/recipes/22908/everyday-cooking/special-collections/new/" data-header-link-tracking='{"label": "Browse Recipes > Newest Recipes"}' ng-click="setAnalyticsCookie('browse|newest recipes')" title="Newest Recipes">
-                                    Newest Recipes
+                                <a href="https://www.allrecipes.com/recipes/17235/everyday-cooking/allrecipes-magazine-recipes/" data-header-link-tracking='{"label": "Browse Recipes > Allrecipes Magazine Recipes"}' ng-click="setAnalyticsCookie('browse|allrecipes magazine recipes')" title="Allrecipes Magazine Recipes">
+                                    Allrecipes Magazine Recipes
+                                </a>
+                            </li>
+<li>
+                                <a href="https://www.allrecipes.com/recipes/22908/everyday-cooking/special-collections/new/" data-header-link-tracking='{"label": "Browse Recipes > Our Newest Recipes"}' ng-click="setAnalyticsCookie('browse|our newest recipes')" title="Our Newest Recipes">
+                                    Our Newest Recipes
                                 </a>
                             </li>
 <li>
@@ -651,7 +776,6 @@
 
     <!-- hub links, etc. -->
     <div class="nav-tab last ng-hide" popup-panel="topNavHamburgerMenu" ng-cloak>
-
         <ul class="nav-tab__options">
             <li class="underline_link">
                 <a href="" id="navmenu_recipes" popup-trigger="browseRecipePanel" ng-click="browseNav()">
@@ -661,8 +785,6 @@
                     <span class="icon-chevron" ng-class="{'active': isActive}"></span>
                 </a>
             </li>
-
-
 
 
 
@@ -705,11 +827,11 @@
         <li>
             <input type="checkbox" id="Seasonal"><label for="Seasonal">Seasonal<span class="icon-chevron"></span></label>
             <ul class="mobile-browse-subnav">
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Thanksgiving", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/198/holidays-and-events/thanksgiving/" ng-click="setAnalyticsCookie('browse|thanksgiving')" title="Thanksgiving Recipes">Thanksgiving</a></li>
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Friendsgiving", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/17185/everyday-cooking/entertaining/" ng-click="setAnalyticsCookie('browse|friendsgiving')" title="Friendsgiving Recipes">Friendsgiving</a></li>
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Hanukkah Recipes", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/190/holidays-and-events/hanukkah/" ng-click="setAnalyticsCookie('browse|hanukkah recipes')" title="Hanukkah Recipes">Hanukkah Recipes</a></li>
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Christmas", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/187/holidays-and-events/christmas/" ng-click="setAnalyticsCookie('browse|christmas')" title="Christmas Recipes">Christmas</a></li>
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > More Holidays & Events", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/85/holidays-and-events/" ng-click="setAnalyticsCookie('browse|more holidays \u0026 events')" title="More Holidays & Events Recipes">More Holidays &amp; Events</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Fathers Day", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/1641/holidays-and-events/fathers-day/" ng-click="setAnalyticsCookie('browse|father\u0027s day')" title="Father's Day Recipes">Father&#39;s Day</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > 4th of July", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/191/holidays-and-events/4th-of-july/" ng-click="setAnalyticsCookie('browse|4th of july')" title="4th of July Recipes">4th of July</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Summer Recipes", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/630/everyday-cooking/seasonal/summer/" ng-click="setAnalyticsCookie('browse|summer recipes')" title="Summer Recipes">Summer Recipes</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Labor Day", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/1640/holidays-and-events/labor-day/" ng-click="setAnalyticsCookie('browse|labor day')" title="Labor Day Recipes">Labor Day</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > More Holidays and Events", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/85/holidays-and-events/" ng-click="setAnalyticsCookie('browse|more holidays and events')" title="More Holidays and Events Recipes">More Holidays and Events</a></li>
             </ul>
         </li>
         <li>
@@ -745,9 +867,10 @@
         <li>
             <input type="checkbox" id="Special Collections"><label for="Special Collections">Special Collections<span class="icon-chevron"></span></label>
             <ul class="mobile-browse-subnav">
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Allrecipes Magazine Recipes", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/17235/everyday-cooking/allrecipes-magazine-recipes/" ng-click="setAnalyticsCookie('browse|allrecipes magazine recipes')" title="Allrecipes Magazine Recipes">Allrecipes Magazine Recipes</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Quarantine Cooking", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/83/everyday-cooking/convenience-cooking/" ng-click="setAnalyticsCookie('browse|quarantine cooking')" title="Quarantine Cooking Recipes">Quarantine Cooking</a></li>
 <li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Food Wishes with Chef John", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/16791/everyday-cooking/special-collections/web-show-recipes/food-wishes/" ng-click="setAnalyticsCookie('browse|food wishes with chef john')" title="Food Wishes with Chef John Recipes">Food Wishes with Chef John</a></li>
-<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Newest Recipes", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/22908/everyday-cooking/special-collections/new/" ng-click="setAnalyticsCookie('browse|newest recipes')" title="Newest Recipes">Newest Recipes</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Allrecipes Magazine Recipes", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/17235/everyday-cooking/allrecipes-magazine-recipes/" ng-click="setAnalyticsCookie('browse|allrecipes magazine recipes')" title="Allrecipes Magazine Recipes">Allrecipes Magazine Recipes</a></li>
+<li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Our Newest Recipes", "eventName": "Hamburger Nav Action Taken"}' href="https://www.allrecipes.com/recipes/22908/everyday-cooking/special-collections/new/" ng-click="setAnalyticsCookie('browse|our newest recipes')" title="Our Newest Recipes">Our Newest Recipes</a></li>
 <li><a data-link-tracking='{"label": "Hamburger Menu > Browse Recipes > Trusted Brands", "eventName": "Hamburger Nav Action Taken"}' href="http://dish.allrecipes.com/trusted-brand-pages/" ng-click="setAnalyticsCookie('browse|trusted brands')" title="Trusted Brands Recipes">Trusted Brands</a></li>
             </ul>
         </li>
@@ -772,41 +895,38 @@
                 </a>
             </li>
 
-            <li ng-click="setAnalyticsData('shop')">
-                <a href="http://shop.allrecipes.com/shop" id="navmenu_shop" target="_blank" rel="noopener" data-link-tracking='{"label": "Hambuger Menu > Shop", "eventName": "Header Action Taken"}'>
-                    <span class="nav-icon svg-icon--top-nav-bar--nav-shop svg-icon--top-nav-bar--nav-shop-dims"></span>
-                    <span>Shop</span>
-                </a>
-            </li>
             <li class="underline_link" ng-click="setAnalyticsData('cooking school')">
                 <a href="http://cookingschool.allrecipes.com/" id="navmenu_cooking_school" target="_blank" rel="noopener" data-link-tracking='{"label": "Hamburger Menu > Cooking School", "eventName": "Header Action Taken"}'>
                     <span class="nav-icon svg-icon--top-nav-bar--nav-cookingschool svg-icon--top-nav-bar--nav-cookingschool-dims"></span>
                     <span>Cooking School</span>
                 </a>
             </li>
+
             <li ng-click="setAnalyticsCookie('newsletters')">
                 <a href="https://www.allrecipes.com/cook/my/account-settings/#NewslettersSubscription" id="navmenu_social_gallery" rel="noopener" data-link-tracking='{"label": "Hambuger Menu > Newsletters", "eventName": "Header Action Taken"}'>
                     <span class="nav-icon svg-icon--top-nav-bar--nav-newsletters svg-icon--top-nav-bar--nav-newsletters-dims"></span>
                     <span>Newsletters</span>
                 </a>
             </li>
+
             <li ng-click="setAnalyticsData('ask the community')">
                 <a href="http://dish.allrecipes.com/ask-the-community/" target="_self" id="navmenu_dish" rel="noopener" data-link-tracking='{"label": "Hambuger Menu > Ask The Community", "eventName": "Header Action Taken"}'>
                     <span class="nav-icon svg-icon--top-nav-bar--nav-community svg-icon--top-nav-bar--nav-community-dims"></span>
                     <span>Ask the Community</span>
                 </a>
             </li>
+
             <li class="underline_link" ng-click="setAnalyticsData('help')">
                 <a href="http://dish.allrecipes.com/customer-service/" id="navmenu_help" target="_self" rel="noopener" data-link-tracking='{"label": "Hambuger Menu > Help", "eventName": "Header Action Taken"}'>
                     <span class="nav-icon svg-icon--top-nav-bar--nav-help svg-icon--top-nav-bar--nav-help-dims"></span>
                     <span>Help</span>
                 </a>
             </li>
+
             <li>
                 <a href="http://dish.allrecipes.com/allrecipes-jobs-2/" target="_self" ng-click="setAnalyticsData('jobs')" rel="noopener" data-link-tracking='{"label": "Hamburger Menu > Jobs", "eventName": "Header Action Taken"}'>Jobs</a>
                 <a href="http://press.allrecipes.com/" ng-click="setAnalyticsData('newsroom')" rel="noopener" data-link-tracking='{"label": "Hamburger Menu > Newsroom", "eventName": "Header Action Taken"}'>Newsroom</a>
             </li>
-
         </ul>
     </div>
 </section>
@@ -835,7 +955,7 @@
 </script>
 
 
-    <img src="https://pubads.g.doubleclick.net/gampad/ad?iu=/3865/DFP_1x1_impression_tracker&amp;sz=1x1&amp;t=adpartner%3D&amp;c=8978b95e-9aed-47b0-8637-dd5b5d46dd51" style="display:none" />
+    <img src="https://pubads.g.doubleclick.net/gampad/ad?iu=/3865/DFP_1x1_impression_tracker&amp;sz=1x1&amp;t=adpartner%3D&amp;c=3cc136cc-67ef-4726-a011-d2842e13a178" style="display:none" />
 <div id="ad-is-mobile"></div>
 <div id="ad-is-tablet"></div>
 <script>
@@ -991,6 +1111,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/photos/987785/" ng-click="$event.preventDefault(); openGalery(null, 230347, 'Roasted Vegetable and Couscous Salad', '', '7799362','Recipe')">
+                                <img src="https://images.media-allrecipes.com/userphotos/125x70/7799362.jpg" alt="">
+
+                            </a>
+                        </li>
+                        <li>
                             <a href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/photos/987785/" ng-click="$event.preventDefault(); openGalery(null, 230347, 'Roasted Vegetable and Couscous Salad', '', '1050717','Recipe')">
                                 <img src="https://images.media-allrecipes.com/userphotos/125x70/1050717.jpg" alt="">
 
@@ -1052,13 +1178,13 @@
             <span ng-controller="ar_controllers_recipe_reviews" ng-init="init(230347, 2, 9, 'Recipe', 5, 'MostHelpful', 420)">
 
                     <a class="read--reviews" ng-click="$event.preventDefault();reviewModalDialog(0, sortBy)" target="_self" aria-label="Read Review Details">
-                        <span class="made-it-count"></span><span>13&nbsp;made it</span><span role="presentation">&nbsp; |&nbsp;</span>
+                        <span class="made-it-count"></span><span>15&nbsp;made it</span><span role="presentation">&nbsp; |&nbsp;</span>
                         <span class="review-count">10 reviews</span>
                     </a>
             </span>
             <span ng-controller="ar_controllers_recipe_photo" ng-hide="showplayer">
                     <a href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/photos/987785/" class="icon-photoPage-link" ng-click="$event.preventDefault(); openGalery(null, 230347, 'Roasted Vegetable and Couscous Salad', ', null', Recipe)">
-                        <span>&nbsp; | &nbsp;</span><span class="picture-count-link">3 photos</span>
+                        <span>&nbsp; | &nbsp;</span><span class="picture-count-link">4 photos</span>
                     </a>
             </span>
         </div>
@@ -1068,7 +1194,7 @@
         <!-- UserStatusId comes from npec40.dbo.tblUser via sproc spGetListViewProfiles_v2. Possible values enumerated in NPEC40.dbo.tblUserStatus -->
         <div class="submitter__img">
             <a href="https://www.allrecipes.com/cook/unitedsoybeanboard/"><img class="img-profile img-profile--submitter" src="https://images.media-allrecipes.com/userphotos/50x50/1114763.jpg" alt="" /></a>
-            <span><span class="svg-icon--cook-card--follow svg-icon--cook-card--follow-dims" title="Followers"></span><span>3</span></span>
+            <span><span class="svg-icon--cook-card--follow svg-icon--cook-card--follow-dims" title="Followers"></span><span>7</span></span>
         </div>
         <p>
             <span class="submitter__byline">Recipe by: </span><span class="submitter__name" itemprop="author">United Soybean Board</span>
@@ -1116,11 +1242,11 @@
             <span>Print</span>
         </a>
 
-        <a class="pinterest-btn" href="#" ng-click="socialShareNavigate('http://pinterest.com/pin/create/button/?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dusspnt%26media%3dhttps%3a%2f%2fimages.media-allrecipes.com%2fuserphotos%2f250x250%2f987785.jpg%26description%3dRoasted+Vegetable+and+Couscous+Salad+-+Allrecipes.com%26utm_medium%3dsocial%26utm_content%3d20181112%26utm_source%3dpinterest.com%26utm_campaign%3dsocial-share-recipe', '_blank', PinterestTargetParams, 'Pinterest - Ribbon');" aria-label="Share this recipe on Pinterest">
+        <a class="pinterest-btn" href="#" ng-click="socialShareNavigate('http://pinterest.com/pin/create/button/?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dusspnt%26media%3dhttps%3a%2f%2fimages.media-allrecipes.com%2fuserphotos%2f250x250%2f987785.jpg%26description%3dRoasted+Vegetable+and+Couscous+Salad+-+Allrecipes.com%26utm_medium%3dsocial%26utm_content%3d20200602%26utm_source%3dpinterest.com%26utm_campaign%3dsocial-share-recipe', '_blank', PinterestTargetParams, 'Pinterest - Ribbon');" aria-label="Share this recipe on Pinterest">
             <span class="svg-icon--social--pinterest_color svg-icon--social--pinterest_color-dims"></span><span class="social-btn-text">Pin</span>
         </a>
 
-        <a class="facebook-btn" href="#" ng-click="socialShareNavigate('https://facebook.com/sharer.php?u=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dussfac%26utm_medium%3dsocial%26utm_content%3d20181112%26utm_source%3dfacebook.com%26utm_campaign%3dsocial-share-recipe', '_blank', FacebookTargetParams, 'Facebook - Ribbon');" aria-label="Share this recipe on Facebook">
+        <a class="facebook-btn" href="#" ng-click="socialShareNavigate('https://facebook.com/sharer.php?u=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dussfac%26utm_medium%3dsocial%26utm_content%3d20200602%26utm_source%3dfacebook.com%26utm_campaign%3dsocial-share-recipe', '_blank', FacebookTargetParams, 'Facebook - Ribbon');" aria-label="Share this recipe on Facebook">
             <span class="svg-icon--social--facebook_color svg-icon--social--facebook_color-dims"></span><span class="social-btn-text">Share</span>
         </a>
     </section>
@@ -1350,44 +1476,16 @@
 </div>
 <div class="relatedVideos">
             <div class="relatedVideos__item">
-                <a href="https://www.allrecipes.com/video/7673/roasted-tomato-soup/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 1">
-                    <img class="relatedVideos__thumbnail" data-lazy-load data-original-src="https://cf-images.us-east-1.prod.boltdns.net/v1/static/1033249144001/5205cc7a-268f-4d1f-acb9-84f309c1fe38/f4f901b8-80c3-4178-b2f8-4f860e3bc675/160x90/match/image.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
+                <a href="https://www.allrecipes.com/video/4626/shrimp-and-vegetable-couscous/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 1">
+                    <img class="relatedVideos__thumbnail" data-lazy-load data-original-src="https://cf-images.us-east-1.prod.boltdns.net/v1/static/1033249144001/9d046038-85ad-4f89-b7d5-a9913ea798c5/a19ab0d5-a08d-4aa7-857c-c92cb59b7e31/160x90/match/image.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
                 </a>
                 <div class="relatedVideos__thumbnail__icon-hasVideo">
-                    <a class="icon--videoplay" href="https://www.allrecipes.com/video/7673/roasted-tomato-soup/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 1"></a>
+                    <a class="icon--videoplay" href="https://www.allrecipes.com/video/4626/shrimp-and-vegetable-couscous/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 1"></a>
                 </div>
                 <div class="relatedVideos__details">
-                    <a href="https://www.allrecipes.com/video/7673/roasted-tomato-soup/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 1">
-                        <span class="relatedVideos__details_title">Roasted Tomato Soup</span>
-                        <p class="relatedVideos__details__description">Paleo perfection in a red roasted soup!</p>
-                    </a>
-                </div>
-            </div>
-            <div class="relatedVideos__item">
-                <a href="https://www.allrecipes.com/video/7563/shrimp-pasta-salad-with-a-creamy-lemon-dressing/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 2">
-                    <img class="relatedVideos__thumbnail" data-lazy-load data-original-src="https://cf-images.us-east-1.prod.boltdns.net/v1/static/1033249144001/a7a7a221-65b7-473a-8879-104783c914a0/e9e2f0fd-1ab3-4060-9a04-0e332ccb0aef/160x90/match/image.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
-                </a>
-                <div class="relatedVideos__thumbnail__icon-hasVideo">
-                    <a class="icon--videoplay" href="https://www.allrecipes.com/video/7563/shrimp-pasta-salad-with-a-creamy-lemon-dressing/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 2"></a>
-                </div>
-                <div class="relatedVideos__details">
-                    <a href="https://www.allrecipes.com/video/7563/shrimp-pasta-salad-with-a-creamy-lemon-dressing/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 2">
-                        <span class="relatedVideos__details_title">Shrimp Pasta Salad with a Creamy Lemon Dressing</span>
-                        <p class="relatedVideos__details__description">Light, delicious summer salad for backyard picnicking!</p>
-                    </a>
-                </div>
-            </div>
-            <div class="relatedVideos__item">
-                <a href="https://www.allrecipes.com/video/7534/asian-chicken-salad-in-a-jar/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 3">
-                    <img class="relatedVideos__thumbnail" data-lazy-load data-original-src="https://cf-images.us-east-1.prod.boltdns.net/v1/static/1033249144001/03b99fda-4911-42d2-9bb2-c3f850a3368b/2e95d955-3a30-40c5-8d39-adc31a27d1c8/160x90/match/image.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
-                </a>
-                <div class="relatedVideos__thumbnail__icon-hasVideo">
-                    <a class="icon--videoplay" href="https://www.allrecipes.com/video/7534/asian-chicken-salad-in-a-jar/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 3"></a>
-                </div>
-                <div class="relatedVideos__details">
-                    <a href="https://www.allrecipes.com/video/7534/asian-chicken-salad-in-a-jar/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 3">
-                        <span class="relatedVideos__details_title">Asian Chicken Salad in a Jar</span>
-                        <p class="relatedVideos__details__description">Easy, grab ‘n’ go salad for lunch!</p>
+                    <a href="https://www.allrecipes.com/video/4626/shrimp-and-vegetable-couscous/" data-internal-referrer-link="tips and tricks" data-click-id="tips and tricks 1">
+                        <span class="relatedVideos__details_title">Shrimp and Vegetable Couscous</span>
+                        <p class="relatedVideos__details__description">See how to make healthy, flavorful shrimp and veggie couscous. </p>
                     </a>
                 </div>
             </div>
@@ -1399,9 +1497,9 @@
     
     <a ng-href="{{CtaSubscriptionUrl}}" target="_blank" class="ad-mag-homeBtm">
         <h2>Get the magazine</h2>
-        <img class="ad-mag-homeBtm__th" data-lazy-load data-original-src="https://images.media-allrecipes.com/images/85514.jpg" alt="Subscribe to Allrecipes Magazine" title="Allrecipes Magazine"  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
+        <img class="ad-mag-homeBtm__th" data-lazy-load data-original-src="https://images.media-allrecipes.com/images/86146.png" alt="Subscribe to Allrecipes Magazine" title="Allrecipes Magazine"  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
         <div class="ad-mag-homeBtm__text">
-            <h4>Get a full year for $10!</h4>
+            <h4>Get a full year for $5!</h4>
             <p>Cook 5-star weekday dinners every time.</p>
         </div>
     </a>
@@ -1448,7 +1546,7 @@
 
 
 
-<div data-ng-controller="ar_controllers_made_it" data-ng-init="init(230347, '0', '', '1/1/0001', 'Recipe', 0, 0, 0, 13, 420)">
+<div data-ng-controller="ar_controllers_made_it" data-ng-init="init(230347, '0', '', '1/1/0001', 'Recipe', 0, 0, 0, 15, 420)">
     <!-- made recipe toolbar -->
     <section id="recipe-toolbar" class="recipe-toolbar">
         <!-- photo upload block -->
@@ -1475,10 +1573,9 @@
             <h2 class="heading__h2--gutters share">Share</h2>
 <section ng-controller="ar_controllers_share_item" id="shareRecipe">
     <section class="recipe-share share-container">
-        <a href="" ng-click="socialShareNavigate('http://pinterest.com/pin/create/button/?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dusspnt%26media%3dhttps%3a%2f%2fimages.media-allrecipes.com%2fuserphotos%2f250x250%2f987785.jpg%26description%3dRoasted+Vegetable+and+Couscous+Salad+-+Allrecipes.com%26utm_medium%3dsocial%26utm_content%3d20181112%26utm_source%3dpinterest.com%26utm_campaign%3dsocial-share-recipe', '_blank', PinterestTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Pinterest'}, {itemId: '230347', eventName: 'pinterest'}, true);" class="pinterest" aria-label="Share on Pinterest"><span class="svg-icon--social--pinterest svg-icon--social--pinterest-dims"></span></a>
-        <a href="" ng-click="socialShareNavigate('https://facebook.com/sharer.php?u=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dussfac%26utm_medium%3dsocial%26utm_content%3d20181112%26utm_source%3dfacebook.com%26utm_campaign%3dsocial-share-recipe', '_blank', FacebookTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Facebook'}, {itemId: '230347', eventName: 'facebook'}, true);" class="facebook" aria-label="Share on Facebook"><span class="svg-icon--social--facebook svg-icon--social--facebook-dims"></span></a>
-        <a href="" ng-click="socialShareNavigate('https://twitter.com/intent/tweet?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dusstwt%26utm_medium%3dsocial%26utm_content%3d20181112%26utm_source%3dtwitter.com%26utm_campaign%3dsocial-share-recipe%26text%3dRoasted+Vegetable+and+Couscous+Salad+-+Allrecipes.com%26via%3dAllrecipes', '_blank', TwitterTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Twitter'}, {itemId: '230347', eventName: 'twitter'}, true);" class="twitter" aria-label="Share on Twitter"><span class="svg-icon--social--twitter svg-icon--social--twitter-dims"></span></a>
-        <a href="" ng-click="socialShareNavigate('https://plus.google.com/share?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dussgog%26utm_medium%3dsocial%26utm_content%3d20181112%26utm_source%3dplus.google.com%26utm_campaign%3dsocial-share-recipe', '_blank', GoogleTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Google Plus'}, {itemId: '230347', eventName: 'google+'}, true);" class="google" aria-label="Share on Google Plus"><span class="svg-icon--social--google-button svg-icon--social--google-button-dims" style="transform: scale(1.8,1.8)"></span></a>
+        <a href="" ng-click="socialShareNavigate('http://pinterest.com/pin/create/button/?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dusspnt%26media%3dhttps%3a%2f%2fimages.media-allrecipes.com%2fuserphotos%2f250x250%2f987785.jpg%26description%3dRoasted+Vegetable+and+Couscous+Salad+-+Allrecipes.com%26utm_medium%3dsocial%26utm_content%3d20200602%26utm_source%3dpinterest.com%26utm_campaign%3dsocial-share-recipe', '_blank', PinterestTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Pinterest'}, {itemId: '230347', eventName: 'pinterest'}, true);" class="pinterest" aria-label="Share on Pinterest"><span class="svg-icon--social--pinterest svg-icon--social--pinterest-dims"></span></a>
+        <a href="" ng-click="socialShareNavigate('https://facebook.com/sharer.php?u=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dussfac%26utm_medium%3dsocial%26utm_content%3d20200602%26utm_source%3dfacebook.com%26utm_campaign%3dsocial-share-recipe', '_blank', FacebookTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Facebook'}, {itemId: '230347', eventName: 'facebook'}, true);" class="facebook" aria-label="Share on Facebook"><span class="svg-icon--social--facebook svg-icon--social--facebook-dims"></span></a>
+        <a href="" ng-click="socialShareNavigate('https://twitter.com/intent/tweet?url=https%3a%2f%2fwww.allrecipes.com%2frecipe%2f230347%2froasted-vegetable-and-couscous-salad%2f%3flnkid%3dusstwt%26utm_medium%3dsocial%26utm_content%3d20200602%26utm_source%3dtwitter.com%26utm_campaign%3dsocial-share-recipe%26text%3dRoasted+Vegetable+and+Couscous+Salad+-+Allrecipes.com%26via%3dAllrecipes', '_blank', TwitterTargetParams, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Twitter'}, {itemId: '230347', eventName: 'twitter'}, true);" class="twitter" aria-label="Share on Twitter"><span class="svg-icon--social--twitter svg-icon--social--twitter-dims"></span></a>
         <a href="" class="email" ng-click="toggleEmailForm(false, {category: 'Recipe', contentType: 'Recipe', contentCmsId: 230347, label: 'Email'})" aria-label="Share via email"><span class="svg-icon--social--email svg-icon--social--email-dims"></span></a>
 
     </section>
@@ -1526,65 +1623,65 @@
                     <a href="">
                         <div class="slider-card__ratings" onclick="AnchorScroll('reviews')" >
                                 
-<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.57999992370605" aria-label="Rated 4.58 out of 5 stars"></span>
+<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.53000020980835" aria-label="Rated 4.53 out of 5 stars"></span>
 
                             <span class="aggregate-rating">
-                                <meta content="4.58">
-                                <span class="grid-col__reviews" aria-label="with 81 reviews"><format-large-number number="81"></format-large-number></span>
-                            </span>
-                        </div>
-                    </a>
-                </div>
-                <div class="slider-card" ng-click="setAnalyticsCookie('similar recipe')">
-                    <ar-save-item class='favorite similar' data-id="158665" data-type="'Recipe'" data-name="&quot;Balsamic Roasted Vegetable Salad&quot;" data-segmentpageproperties="segmentContentInfo" data-imageurl="'https://images.media-allrecipes.com/userphotos/150x150/703682.jpg'"></ar-save-item>
-                    <a href="https://www.allrecipes.com/recipe/158665/balsamic-roasted-vegetable-salad/" data-internal-referrer-link="similar_recipe_banner" data-click-id="simslot_2" referring-id="230347">
-                        <img class="slider-card__img" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/150x150/703682.jpg" alt="Balsamic Roasted Vegetable Salad Recipe - This salad is a blend of roasted red onion, new potatoes, peppers, cherry tomatoes and baby spinach tossed in balsamic vinegar and sprinkled with toasted pine nuts. Lovely for summer barbecues." title="Balsamic Roasted Vegetable Salad"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
-                        <h3 class="slider-card__h3">Balsamic Roasted Vegetable Salad</h3>
-                    </a>
-                    <a href="">
-                        <div class="slider-card__ratings" onclick="AnchorScroll('reviews')" >
-                                
-<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.44999980926514" aria-label="Rated 4.45 out of 5 stars"></span>
-
-                            <span class="aggregate-rating">
-                                <meta content="4.45">
-                                <span class="grid-col__reviews" aria-label="with 24 reviews"><format-large-number number="24"></format-large-number></span>
+                                <meta content="4.53">
+                                <span class="grid-col__reviews" aria-label="with 136 reviews"><format-large-number number="136"></format-large-number></span>
                             </span>
                         </div>
                     </a>
                 </div>
                 <div class="slider-card" ng-click="setAnalyticsCookie('similar recipe')">
                     <ar-save-item class='favorite similar' data-id="237079" data-type="'Recipe'" data-name="&quot;Kale and Cucumber Salad with Lemon Tahini Dressing&quot;" data-segmentpageproperties="segmentContentInfo" data-imageurl="'https://images.media-allrecipes.com/userphotos/150x150/1114761.jpg'"></ar-save-item>
-                    <a href="https://www.allrecipes.com/recipe/237079/kale-and-cucumber-salad-with-lemon-tahini-dressing/" data-internal-referrer-link="similar_recipe_banner" data-click-id="simslot_3" referring-id="230347">
+                    <a href="https://www.allrecipes.com/recipe/237079/kale-and-cucumber-salad-with-lemon-tahini-dressing/" data-internal-referrer-link="similar_recipe_banner" data-click-id="simslot_2" referring-id="230347">
                         <img class="slider-card__img" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/150x150/1114761.jpg" alt="Kale and Cucumber Salad with Lemon Tahini Dressing Recipe - Make this crunchy nutrition-packed salad in a flash. Whip up a second batch of dressing and keep in the fridge to satisfy the next kale craving." title="Kale and Cucumber Salad with Lemon Tahini Dressing"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
                         <h3 class="slider-card__h3">Kale and Cucumber Salad with Lemon Ta...</h3>
                     </a>
                     <a href="">
                         <div class="slider-card__ratings" onclick="AnchorScroll('reviews')" >
                                 
-<span class="stars stars-4"  onclick="AnchorScroll('reviews')" data-ratingstars="4.23000001907349" aria-label="Rated 4.23 out of 5 stars"></span>
+<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.25" aria-label="Rated 4.25 out of 5 stars"></span>
 
                             <span class="aggregate-rating">
-                                <meta content="4.23">
-                                <span class="grid-col__reviews" aria-label="with 22 reviews"><format-large-number number="22"></format-large-number></span>
+                                <meta content="4.25">
+                                <span class="grid-col__reviews" aria-label="with 24 reviews"><format-large-number number="24"></format-large-number></span>
                             </span>
                         </div>
                     </a>
                 </div>
                 <div class="slider-card" ng-click="setAnalyticsCookie('similar recipe')">
                     <ar-save-item class='favorite similar' data-id="237080" data-type="'Recipe'" data-name="&quot;Fresh Fruit and Berry Crumble&quot;" data-segmentpageproperties="segmentContentInfo" data-imageurl="'https://images.media-allrecipes.com/userphotos/150x150/1114760.jpg'"></ar-save-item>
-                    <a href="https://www.allrecipes.com/recipe/237080/fresh-fruit-and-berry-crumble/" data-internal-referrer-link="similar_recipe_banner" data-click-id="simslot_4" referring-id="230347">
+                    <a href="https://www.allrecipes.com/recipe/237080/fresh-fruit-and-berry-crumble/" data-internal-referrer-link="similar_recipe_banner" data-click-id="simslot_3" referring-id="230347">
                         <img class="slider-card__img" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/150x150/1114760.jpg" alt="Fresh Fruit and Berry Crumble Recipe - Mix fresh fruit with kitchen pantry staples for a delicious dessert. Check the pantry for soybean oil--it's labeled vegetable oil." title="Fresh Fruit and Berry Crumble"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
                         <h3 class="slider-card__h3">Fresh Fruit and Berry Crumble</h3>
                     </a>
                     <a href="">
                         <div class="slider-card__ratings" onclick="AnchorScroll('reviews')" >
                                 
-<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.5" aria-label="Rated 4.5 out of 5 stars"></span>
+<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.55999994277954" aria-label="Rated 4.56 out of 5 stars"></span>
 
                             <span class="aggregate-rating">
-                                <meta content="4.50">
-                                <span class="grid-col__reviews" aria-label="with 7 reviews"><format-large-number number="7"></format-large-number></span>
+                                <meta content="4.56">
+                                <span class="grid-col__reviews" aria-label="with 8 reviews"><format-large-number number="8"></format-large-number></span>
+                            </span>
+                        </div>
+                    </a>
+                </div>
+                <div class="slider-card" ng-click="setAnalyticsCookie('similar recipe')">
+                    <ar-save-item class='favorite similar' data-id="237082" data-type="'Recipe'" data-name="&quot;Easy Shrimp and Veggie Pasta Fresca&quot;" data-segmentpageproperties="segmentContentInfo" data-imageurl="'https://images.media-allrecipes.com/userphotos/150x150/1114762.jpg'"></ar-save-item>
+                    <a href="https://www.allrecipes.com/recipe/237082/easy-shrimp-and-veggie-pasta-fresca/" data-internal-referrer-link="similar_recipe_banner" data-click-id="simslot_4" referring-id="230347">
+                        <img class="slider-card__img" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/150x150/1114762.jpg" alt="Easy Shrimp and Veggie Pasta Fresca Recipe - Fresh veggies, shrimp and pasta make this one-dish meal a busy cook's dream! Neutral soybean oil lets the fresh flavors take center stage. Serve and enjoy, hot or cold!" title="Easy Shrimp and Veggie Pasta Fresca"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
+                        <h3 class="slider-card__h3">Easy Shrimp and Veggie Pasta Fresca</h3>
+                    </a>
+                    <a href="">
+                        <div class="slider-card__ratings" onclick="AnchorScroll('reviews')" >
+                                
+<span class="stars stars-4-5"  onclick="AnchorScroll('reviews')" data-ratingstars="4.28999996185303" aria-label="Rated 4.29 out of 5 stars"></span>
+
+                            <span class="aggregate-rating">
+                                <meta content="4.29">
+                                <span class="grid-col__reviews" aria-label="with 5 reviews"><format-large-number number="5"></format-large-number></span>
                             </span>
                         </div>
                     </a>
@@ -1592,17 +1689,17 @@
 
                 <div class="slider-card" ng-click="setAnalyticsCookie('similar categories')">
                     <a href="https://www.allrecipes.com/recipes/17025/trusted-brands-recipes-and-tips/united-soybean-board/" target="_self" data-internal-referrer-link="similar_category_banner" data-click-id="simslot_5" referring-id="230347">
-                        <img class="slider-card__img hub" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/136x136/991314.jpg" alt="" title="United Soybean Board"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
+                        <img class="slider-card__img hub" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/136x136/1114762.jpg" alt="" title="United Soybean Board"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
                         <h3 class="slider-card__h3">United Soybean Board</h3>
                         <div class="hub-recipeCount">10 recipes</div>
                     </a>
                 </div>
 
                 <div class="slider-card" ng-click="setAnalyticsCookie('similar article')">
-                    <a href="https://www.allrecipes.com/HowTo/perfect-potato-salad" data-internal-referrer-link="similar_article_banner" data-click-id="simslot_6" referring-id="230347">
-                        <img class="slider-card__img" data-lazy-load data-original-src="https://images.media-allrecipes.com/images/8493.jpg" alt="Perfect Potato Salad" title="Perfect Potato Salad"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
-                        <h3 class="slider-card__h3">Perfect Potato Salad</h3>
-                        <span class="article-author">By: Allrecipes Staff</span>
+                    <a href="https://www.allrecipes.com/HowTo/five-steps-to-perfect-pasta-salad" data-internal-referrer-link="similar_article_banner" data-click-id="simslot_6" referring-id="230347">
+                        <img class="slider-card__img" data-lazy-load data-original-src="https://images.media-allrecipes.com/images/7722.jpg" alt="Five Steps to Perfect Pasta Salad" title="Five Steps to Perfect Pasta Salad"  src="https://images.media-allrecipes.com/ar/spacer.gif" data-container="similarRecipes" />
+                        <h3 class="slider-card__h3">Five Steps to Perfect Pasta Salad</h3>
+                        <span class="article-author">By: Pam Anderson</span>
                     </a>
                 </div>
         </div>
@@ -1613,16 +1710,15 @@
     
     <a ng-href="{{CtaSubscriptionUrl}}" target="_blank" class="ad-mag-homeBtm">
         <h2>Get the magazine</h2>
-        <img class="ad-mag-homeBtm__th" data-lazy-load data-original-src="https://images.media-allrecipes.com/images/85514.jpg" alt="Subscribe to Allrecipes Magazine" title="Allrecipes Magazine"  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
+        <img class="ad-mag-homeBtm__th" data-lazy-load data-original-src="https://images.media-allrecipes.com/images/86146.png" alt="Subscribe to Allrecipes Magazine" title="Allrecipes Magazine"  src="https://images.media-allrecipes.com/ar/spacer.gif"/>
         <div class="ad-mag-homeBtm__text">
-            <h4>Get a full year for $10!</h4>
+            <h4>Get a full year for $5!</h4>
             <p>Cook 5-star weekday dinners every time.</p>
         </div>
     </a>
 </div>
         </div>
 
-        
 <div data-ad-container-autocollapse class="ad-recipe-page-middle-container ad-mobile-only reserve-ad-space">
     <div id="ad-recipepagemiddle-2" class="ad-recipe-page-middle-2">
         <div id="div-gpt-mob-square-fixed-2" data-tier="2"></div>
@@ -1631,7 +1727,7 @@
 </div>
 
 <script>
-    var reviewsInitialSet = {"recipeId":230347,"recipeTitle":"Roasted Vegetable and Couscous Salad","recipeImageUrl":"https://images.media-allrecipes.com/userphotos/250x250/987785.jpg","heroImage":null,"reviews":{"MostHelpfulPositive":{"text":"Great.  I only had regular couscous on hand and I cut it down to about 2 cups cooked. I had to add a little more balsamic and a little garlic salt and I was in love with this super easy dish!!  Next time I'll double the recipe because as a main dish two adults and a two year old demolished this instantly:)","rating":5.0,"reviewID":4174109,"helpfulCount":"18","dateLastModified":"January 08, 2013","submitter":{"userID":1571522,"name":"Lizachu","profileUrl":"/cook/1571522/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674152.jpg"}]},"followersCount":"0","favoritesCount":"179","madeRecipesCount":"11","city":null,"region":null}},"MostHelpfulNegative":{"text":"Made with quinoa and without bell pepper, plus added some garlic salt per one of the other reviews. Very easy source of vegetarian protein!","rating":3.0,"reviewID":4445599,"helpfulCount":"4","dateLastModified":"October 01, 2013","submitter":{"userID":10726076,"name":"newdayvow","profileUrl":"/cook/10726076/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/1050601.jpg"}]},"followersCount":"14","favoritesCount":"136","madeRecipesCount":"31","city":null,"region":null}},"MostPositiveIndex":1,"MostCriticalIndex":3,"Reviews":[{"text":"Great.  I only had regular couscous on hand and I cut it down to about 2 cups cooked. I had to add a little more balsamic and a little garlic salt and I was in love with this super easy dish!!  Next time I'll double the recipe because as a main dish two adults and a two year old demolished this instantly:)","rating":5.0,"reviewID":4174109,"helpfulCount":"18","dateLastModified":"January 08, 2013","submitter":{"userID":1571522,"name":"Lizachu","profileUrl":"/cook/1571522/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674152.jpg"}]},"followersCount":"0","favoritesCount":"179","madeRecipesCount":"11","city":null,"region":null}},{"text":"This recipe was great!  It was missing a tiny bit of flavor so I added some garlic and onion powder (I wish I added fresh garlic!).  I also added a bit more balsamic then the recipe called for.  I also added a touch of soy sauce.  Other than that it was delish!","rating":4.0,"reviewID":4238646,"helpfulCount":"13","dateLastModified":"February 27, 2013","submitter":{"userID":10990661,"name":"livelovelaugh13","profileUrl":"/cook/10990661/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674168.jpg"}]},"followersCount":"0","favoritesCount":"1","madeRecipesCount":"2","city":null,"region":null}},{"text":"Made with quinoa and without bell pepper, plus added some garlic salt per one of the other reviews. Very easy source of vegetarian protein!","rating":3.0,"reviewID":4445599,"helpfulCount":"4","dateLastModified":"October 01, 2013","submitter":{"userID":10726076,"name":"newdayvow","profileUrl":"/cook/10726076/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/1050601.jpg"}]},"followersCount":"14","favoritesCount":"136","madeRecipesCount":"31","city":null,"region":null}},{"text":"This recipe had so much potential but the balsamic vinegar completely killed it for me.  The roasted vegetables were so delicious prior to dousing them with an oil / balsamic vinegar concoction.  I will try the overall concept again but definitely will not use this recipe.","rating":2.0,"reviewID":4245463,"helpfulCount":"3","dateLastModified":"March 06, 2013","submitter":{"userID":2351572,"name":"EMW","profileUrl":"/cook/2351572/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674149.jpg"}]},"followersCount":"0","favoritesCount":"349","madeRecipesCount":"60","city":null,"region":null}},{"text":"This was gross and boring, and far too much oil. Perhaps could be saved with some herbs and less oil?","rating":2.0,"reviewID":4744674,"helpfulCount":"2","dateLastModified":"June 22, 2014","submitter":{"userID":6276513,"name":"KrystaB.","profileUrl":"/cook/tinykitcheninqueens/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/753257.jpg"}]},"followersCount":"0","favoritesCount":"79","madeRecipesCount":"28","city":null,"region":null}},{"text":"This is great!  I did use quinoa instead of couscous.  I also added a beet because I needed to use it, and I used olive oil rather than vegetable oil.  Absolutely delicious.  One of the best salads I've made!","rating":5.0,"reviewID":4739209,"helpfulCount":"2","dateLastModified":"June 15, 2014","submitter":{"userID":590890,"name":"PULLEYHEATHER","profileUrl":"/cook/hkp123/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/38742.jpg"}]},"followersCount":"32","favoritesCount":"874","madeRecipesCount":"862","city":null,"region":null}},{"text":"This is an outstanding recipe w. the following changes & additions:  2c. broccoli florets, 1/2 ea. red & green pepper, 1 sm.pkg. sliced Portobello mushrooms, may take a little more balsamic  & olive oil, 1/2 quarter in. sliced zucchini cut in halves,  3 cloves crushed garlic, 1 sm. pkg. feta cheese crumbles, chpd. fr. parsley, salt & pepper to taste. Roast all vegetables!   Use olive oil instead of vegetable, vegetable  broth instead of water to cook the quinoa.  We Love Vegetables!  Roast all of the vegetables according to the recipe instructions.","rating":5.0,"reviewID":5565136,"helpfulCount":"1","dateLastModified":"July 29, 2016","submitter":{"userID":17017529,"name":"Sarah Chadima","profileUrl":"/cook/17017529/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/3799453.jpg"}]},"followersCount":"7","favoritesCount":"3","madeRecipesCount":"1","city":null,"region":null}},{"text":"So yummy and its vegetarian.  I substituted the vinegar for red whine vinegar!","rating":4.0,"reviewID":4336209,"helpfulCount":"1","dateLastModified":"June 07, 2013","submitter":{"userID":10691613,"name":"Jalex","profileUrl":"/cook/10691613/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5677174.jpg"}]},"followersCount":"0","favoritesCount":"29","madeRecipesCount":"1","city":null,"region":null}},{"text":"Not good at all, odd flavor and texture.","rating":1.0,"reviewID":4332229,"helpfulCount":"1","dateLastModified":"June 02, 2013","submitter":{"userID":6882288,"name":"nellyshay","profileUrl":"/cook/6882288/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/820443.jpg"}]},"followersCount":"12","favoritesCount":"1k","madeRecipesCount":"66","city":null,"region":null}}]},"totalReviews":10};
+    var reviewsInitialSet = {"recipeId":230347,"recipeTitle":"Roasted Vegetable and Couscous Salad","recipeImageUrl":"https://images.media-allrecipes.com/userphotos/250x250/987785.jpg","heroImage":null,"reviews":{"MostHelpfulPositive":{"text":"Great.  I only had regular couscous on hand and I cut it down to about 2 cups cooked. I had to add a little more balsamic and a little garlic salt and I was in love with this super easy dish!!  Next time I'll double the recipe because as a main dish two adults and a two year old demolished this instantly:)","rating":5.0,"reviewID":4174109,"helpfulCount":"18","dateLastModified":"January 08, 2013","submitter":{"userID":1571522,"name":"Lizachu","profileUrl":"/cook/1571522/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674152.jpg"}]},"followersCount":"0","favoritesCount":"179","madeRecipesCount":"11","city":null,"region":null}},"MostHelpfulNegative":{"text":"Made with quinoa and without bell pepper, plus added some garlic salt per one of the other reviews. Very easy source of vegetarian protein!","rating":3.0,"reviewID":4445599,"helpfulCount":"4","dateLastModified":"October 01, 2013","submitter":{"userID":10726076,"name":"newdayvow","profileUrl":"/cook/10726076/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/1050601.jpg"}]},"followersCount":"8","favoritesCount":"136","madeRecipesCount":"31","city":null,"region":null}},"MostPositiveIndex":1,"MostCriticalIndex":3,"Reviews":[{"text":"Great.  I only had regular couscous on hand and I cut it down to about 2 cups cooked. I had to add a little more balsamic and a little garlic salt and I was in love with this super easy dish!!  Next time I'll double the recipe because as a main dish two adults and a two year old demolished this instantly:)","rating":5.0,"reviewID":4174109,"helpfulCount":"18","dateLastModified":"January 08, 2013","submitter":{"userID":1571522,"name":"Lizachu","profileUrl":"/cook/1571522/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674152.jpg"}]},"followersCount":"0","favoritesCount":"179","madeRecipesCount":"11","city":null,"region":null}},{"text":"This recipe was great!  It was missing a tiny bit of flavor so I added some garlic and onion powder (I wish I added fresh garlic!).  I also added a bit more balsamic then the recipe called for.  I also added a touch of soy sauce.  Other than that it was delish!","rating":4.0,"reviewID":4238646,"helpfulCount":"13","dateLastModified":"February 27, 2013","submitter":{"userID":10990661,"name":"livelovelaugh13","profileUrl":"/cook/10990661/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674168.jpg"}]},"followersCount":"0","favoritesCount":"1","madeRecipesCount":"2","city":null,"region":null}},{"text":"Made with quinoa and without bell pepper, plus added some garlic salt per one of the other reviews. Very easy source of vegetarian protein!","rating":3.0,"reviewID":4445599,"helpfulCount":"4","dateLastModified":"October 01, 2013","submitter":{"userID":10726076,"name":"newdayvow","profileUrl":"/cook/10726076/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/1050601.jpg"}]},"followersCount":"8","favoritesCount":"136","madeRecipesCount":"31","city":null,"region":null}},{"text":"This recipe had so much potential but the balsamic vinegar completely killed it for me.  The roasted vegetables were so delicious prior to dousing them with an oil / balsamic vinegar concoction.  I will try the overall concept again but definitely will not use this recipe.","rating":2.0,"reviewID":4245463,"helpfulCount":"3","dateLastModified":"March 06, 2013","submitter":{"userID":2351572,"name":"EMW","profileUrl":"/cook/2351572/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5674149.jpg"}]},"followersCount":"0","favoritesCount":"382","madeRecipesCount":"61","city":null,"region":null}},{"text":"This is an outstanding recipe w. the following changes & additions:  2c. broccoli florets, 1/2 ea. red & green pepper, 1 sm.pkg. sliced Portobello mushrooms, may take a little more balsamic  & olive oil, 1/2 quarter in. sliced zucchini cut in halves,  3 cloves crushed garlic, 1 sm. pkg. feta cheese crumbles, chpd. fr. parsley, salt & pepper to taste. Roast all vegetables!   Use olive oil instead of vegetable, vegetable  broth instead of water to cook the quinoa.  We Love Vegetables!  Roast all of the vegetables according to the recipe instructions.","rating":5.0,"reviewID":5565136,"helpfulCount":"2","dateLastModified":"July 29, 2016","submitter":{"userID":17017529,"name":"Sarah Chadima","profileUrl":"/cook/17017529/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/3799453.jpg"}]},"followersCount":"2","favoritesCount":"25","madeRecipesCount":"1","city":null,"region":null}},{"text":"This was gross and boring, and far too much oil. Perhaps could be saved with some herbs and less oil?","rating":2.0,"reviewID":4744674,"helpfulCount":"2","dateLastModified":"June 22, 2014","submitter":{"userID":6276513,"name":"KrystaB.","profileUrl":"/cook/tinykitcheninqueens/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/753257.jpg"}]},"followersCount":"0","favoritesCount":"84","madeRecipesCount":"28","city":null,"region":null}},{"text":"This is great!  I did use quinoa instead of couscous.  I also added a beet because I needed to use it, and I used olive oil rather than vegetable oil.  Absolutely delicious.  One of the best salads I've made!","rating":5.0,"reviewID":4739209,"helpfulCount":"2","dateLastModified":"June 15, 2014","submitter":{"userID":590890,"name":"PULLEYHEATHER","profileUrl":"/cook/hkp123/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/38742.jpg"}]},"followersCount":"40","favoritesCount":"896","madeRecipesCount":"862","city":null,"region":null}},{"text":"So yummy and its vegetarian.  I substituted the vinegar for red whine vinegar!","rating":4.0,"reviewID":4336209,"helpfulCount":"1","dateLastModified":"June 07, 2013","submitter":{"userID":10691613,"name":"Jalex","profileUrl":"/cook/10691613/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/50x50/5677174.jpg"}]},"followersCount":"0","favoritesCount":"29","madeRecipesCount":"1","city":null,"region":null}},{"text":"Not good at all, odd flavor and texture.","rating":1.0,"reviewID":4332229,"helpfulCount":"1","dateLastModified":"June 02, 2013","submitter":{"userID":6882288,"name":"nellyshay","profileUrl":"/cook/6882288/","photo":{"urls":[{"url":"https://images.media-allrecipes.com/userphotos/90x90/6742804.jpg"}]},"followersCount":"2","favoritesCount":"1k","madeRecipesCount":"66","city":null,"region":null}}]},"totalReviews":10};
 </script>
 <section id="reviews" class="recipe-reviews" ng-controller="ar_controllers_recipe_reviews"
          ng-init="init('230347', 2, 9, 'Recipe', 2, 'MostHelpful', 420)">
@@ -2120,13 +2216,13 @@ Made with quinoa and without bell pepper, plus added some garlic salt per one of
         <ul class="cook-details__favorites favorites-count">
             <li>
                 <span class="svg-icon--cook-card--heart svg-icon--cook-card--heart-dims" title="Favorites"></span>
-                349
+                382
             </li>
         </ul>
         <ul class="cook-details__recipes-made recipes-made-count">
             <li>
                 <span class="svg-icon--cook-card--imadeit svg-icon--cook-card--imadeit-dims" title="Recipes Made"></span>
-                60
+                61
             </li>
         </ul>
     </li>
@@ -2169,130 +2265,6 @@ This recipe had so much potential but the balsamic vinegar completely killed it 
 
         <article class="reviewer-info imadeit-enabled">         
                 <div class="recipe-details-cook-stats-container">
-    <a href="https://www.allrecipes.com/cook/tinykitcheninqueens/">
-
-        <ul class="cook-details">
-    <li>
-
-        <img class="img-profile elevate-cook-thumbnail" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/90x90/753257.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif" style="display: inline;" />
-    </li>
-    <li class="cook-info">
-        <h4 itemprop="author">KrystaB.
-        </h4>
-        <ul class="cook-details__favorites favorites-count">
-            <li>
-                <span class="svg-icon--cook-card--heart svg-icon--cook-card--heart-dims" title="Favorites"></span>
-                79
-            </li>
-        </ul>
-        <ul class="cook-details__recipes-made recipes-made-count">
-            <li>
-                <span class="svg-icon--cook-card--imadeit svg-icon--cook-card--imadeit-dims" title="Recipes Made"></span>
-                28
-            </li>
-        </ul>
-    </li>
-</ul>
-
-
-
-
-    </a>
-</div> 
- 
-
-
-
-            
-            <div class="stars-and-date-container" title="Rated as 2 out of 5 stars">
-                    
-<span class="stars stars-2"  onclick="AnchorScroll('reviews')" data-ratingstars="2" aria-label="Rated 2 out of 5 stars"></span>
-
-                <div itemprop="reviewRating" itemscope itemtype="http://schema.org/Rating">
-                    <meta itemprop="ratingValue" content="2">
-                </div>
-                <div itemprop="dateCreated" content="2014-06-22" class="review-date">6/22/2014</div>
-            </div>
-        </article>
-
-        <p itemprop="reviewBody">
-This was gross and boring, and far too much oil. Perhaps could be saved with some herbs and less oil?        </p>
-        <div class="review-detail">
-            <a class="review-detail__link" href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/reviews/4744674/" ng-click="$event.preventDefault();reviewModalDialog(4, sortBy)" aria-label="Read more of this review">
-                <span class="svg-icon--recipe-page--open_modal_gr svg-icon--recipe-page--open_modal_gr-dims"></span>
-                <span>Read more</span>
-            </a>
-        </div>
-    </div>
-
-    <div class="review-container clearfix" itemprop="review" itemscope itemtype="http://schema.org/Review">
-        <meta id="metaRecipeTitle" itemprop="itemReviewed" />
-
-        <article class="reviewer-info imadeit-enabled">         
-                <div class="recipe-details-cook-stats-container">
-    <a href="https://www.allrecipes.com/cook/hkp123/">
-
-        <ul class="cook-details">
-    <li>
-
-        <img class="img-profile elevate-cook-thumbnail" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/90x90/38742.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif" style="display: inline;" />
-    </li>
-    <li class="cook-info">
-        <h4 itemprop="author">PULLEYHEATHER
-        </h4>
-        <ul class="cook-details__favorites favorites-count">
-            <li>
-                <span class="svg-icon--cook-card--heart svg-icon--cook-card--heart-dims" title="Favorites"></span>
-                874
-            </li>
-        </ul>
-        <ul class="cook-details__recipes-made recipes-made-count">
-            <li>
-                <span class="svg-icon--cook-card--imadeit svg-icon--cook-card--imadeit-dims" title="Recipes Made"></span>
-                862
-            </li>
-        </ul>
-    </li>
-</ul>
-
-
-
-
-    </a>
-</div> 
- 
-
-
-
-            
-            <div class="stars-and-date-container" title="Rated as 5 out of 5 stars">
-                    
-<span class="stars stars-5"  onclick="AnchorScroll('reviews')" data-ratingstars="5" aria-label="Rated 5 out of 5 stars"></span>
-
-                <div itemprop="reviewRating" itemscope itemtype="http://schema.org/Rating">
-                    <meta itemprop="ratingValue" content="5">
-                </div>
-                <div itemprop="dateCreated" content="2014-06-15" class="review-date">6/15/2014</div>
-            </div>
-        </article>
-
-        <p itemprop="reviewBody">
-This is great!  I did use quinoa instead of couscous.  I also added a beet because I needed to use it, and I used olive oil rather than vegetable oil.  Absolutely delicious.  One of the best sal...
-        </p>
-        <div class="review-detail">
-            <a class="review-detail__link" href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/reviews/4739209/" ng-click="$event.preventDefault();reviewModalDialog(5, sortBy)" aria-label="Read more of this review">
-                <span class="svg-icon--recipe-page--open_modal_gr svg-icon--recipe-page--open_modal_gr-dims"></span>
-                <span>Read more</span>
-            </a>
-        </div>
-    </div>
-
-            <div class="review-divider"></div>
-    <div class="review-container clearfix" itemprop="review" itemscope itemtype="http://schema.org/Review">
-        <meta id="metaRecipeTitle" itemprop="itemReviewed" />
-
-        <article class="reviewer-info imadeit-enabled">         
-                <div class="recipe-details-cook-stats-container">
     <a href="https://www.allrecipes.com/cook/17017529/">
 
         <ul class="cook-details">
@@ -2306,7 +2278,7 @@ This is great!  I did use quinoa instead of couscous.  I also added a beet becau
         <ul class="cook-details__favorites favorites-count">
             <li>
                 <span class="svg-icon--cook-card--heart svg-icon--cook-card--heart-dims" title="Favorites"></span>
-                3
+                25
             </li>
         </ul>
         <ul class="cook-details__recipes-made recipes-made-count">
@@ -2343,7 +2315,131 @@ This is great!  I did use quinoa instead of couscous.  I also added a beet becau
 This is an outstanding recipe w. the following changes &amp; additions:  2c. broccoli florets, 1/2 ea. red &amp; green pepper, 1 sm.pkg. sliced Portobello mushrooms, may take a little more balsamic  &amp; o...
         </p>
         <div class="review-detail">
-            <a class="review-detail__link" href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/reviews/5565136/" ng-click="$event.preventDefault();reviewModalDialog(6, sortBy)" aria-label="Read more of this review">
+            <a class="review-detail__link" href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/reviews/5565136/" ng-click="$event.preventDefault();reviewModalDialog(4, sortBy)" aria-label="Read more of this review">
+                <span class="svg-icon--recipe-page--open_modal_gr svg-icon--recipe-page--open_modal_gr-dims"></span>
+                <span>Read more</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="review-container clearfix" itemprop="review" itemscope itemtype="http://schema.org/Review">
+        <meta id="metaRecipeTitle" itemprop="itemReviewed" />
+
+        <article class="reviewer-info imadeit-enabled">         
+                <div class="recipe-details-cook-stats-container">
+    <a href="https://www.allrecipes.com/cook/tinykitcheninqueens/">
+
+        <ul class="cook-details">
+    <li>
+
+        <img class="img-profile elevate-cook-thumbnail" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/90x90/753257.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif" style="display: inline;" />
+    </li>
+    <li class="cook-info">
+        <h4 itemprop="author">KrystaB.
+        </h4>
+        <ul class="cook-details__favorites favorites-count">
+            <li>
+                <span class="svg-icon--cook-card--heart svg-icon--cook-card--heart-dims" title="Favorites"></span>
+                84
+            </li>
+        </ul>
+        <ul class="cook-details__recipes-made recipes-made-count">
+            <li>
+                <span class="svg-icon--cook-card--imadeit svg-icon--cook-card--imadeit-dims" title="Recipes Made"></span>
+                28
+            </li>
+        </ul>
+    </li>
+</ul>
+
+
+
+
+    </a>
+</div> 
+ 
+
+
+
+            
+            <div class="stars-and-date-container" title="Rated as 2 out of 5 stars">
+                    
+<span class="stars stars-2"  onclick="AnchorScroll('reviews')" data-ratingstars="2" aria-label="Rated 2 out of 5 stars"></span>
+
+                <div itemprop="reviewRating" itemscope itemtype="http://schema.org/Rating">
+                    <meta itemprop="ratingValue" content="2">
+                </div>
+                <div itemprop="dateCreated" content="2014-06-22" class="review-date">6/22/2014</div>
+            </div>
+        </article>
+
+        <p itemprop="reviewBody">
+This was gross and boring, and far too much oil. Perhaps could be saved with some herbs and less oil?        </p>
+        <div class="review-detail">
+            <a class="review-detail__link" href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/reviews/4744674/" ng-click="$event.preventDefault();reviewModalDialog(5, sortBy)" aria-label="Read more of this review">
+                <span class="svg-icon--recipe-page--open_modal_gr svg-icon--recipe-page--open_modal_gr-dims"></span>
+                <span>Read more</span>
+            </a>
+        </div>
+    </div>
+
+            <div class="review-divider"></div>
+    <div class="review-container clearfix" itemprop="review" itemscope itemtype="http://schema.org/Review">
+        <meta id="metaRecipeTitle" itemprop="itemReviewed" />
+
+        <article class="reviewer-info imadeit-enabled">         
+                <div class="recipe-details-cook-stats-container">
+    <a href="https://www.allrecipes.com/cook/hkp123/">
+
+        <ul class="cook-details">
+    <li>
+
+        <img class="img-profile elevate-cook-thumbnail" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/90x90/38742.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif" style="display: inline;" />
+    </li>
+    <li class="cook-info">
+        <h4 itemprop="author">PULLEYHEATHER
+        </h4>
+        <ul class="cook-details__favorites favorites-count">
+            <li>
+                <span class="svg-icon--cook-card--heart svg-icon--cook-card--heart-dims" title="Favorites"></span>
+                896
+            </li>
+        </ul>
+        <ul class="cook-details__recipes-made recipes-made-count">
+            <li>
+                <span class="svg-icon--cook-card--imadeit svg-icon--cook-card--imadeit-dims" title="Recipes Made"></span>
+                862
+            </li>
+        </ul>
+    </li>
+</ul>
+
+
+
+
+    </a>
+</div> 
+ 
+
+
+
+            
+            <div class="stars-and-date-container" title="Rated as 5 out of 5 stars">
+                    
+<span class="stars stars-5"  onclick="AnchorScroll('reviews')" data-ratingstars="5" aria-label="Rated 5 out of 5 stars"></span>
+
+                <div itemprop="reviewRating" itemscope itemtype="http://schema.org/Rating">
+                    <meta itemprop="ratingValue" content="5">
+                </div>
+                <div itemprop="dateCreated" content="2014-06-15" class="review-date">6/15/2014</div>
+            </div>
+        </article>
+
+        <p itemprop="reviewBody">
+This is great!  I did use quinoa instead of couscous.  I also added a beet because I needed to use it, and I used olive oil rather than vegetable oil.  Absolutely delicious.  One of the best sal...
+        </p>
+        <div class="review-detail">
+            <a class="review-detail__link" href="https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/reviews/4739209/" ng-click="$event.preventDefault();reviewModalDialog(6, sortBy)" aria-label="Read more of this review">
                 <span class="svg-icon--recipe-page--open_modal_gr svg-icon--recipe-page--open_modal_gr-dims"></span>
                 <span>Read more</span>
             </a>
@@ -2421,7 +2517,7 @@ So yummy and its vegetarian.  I substituted the vinegar for red whine vinegar!  
         <ul class="cook-details">
     <li>
 
-        <img class="img-profile elevate-cook-thumbnail" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/90x90/820443.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif" style="display: inline;" />
+        <img class="img-profile elevate-cook-thumbnail" data-lazy-load data-original-src="https://images.media-allrecipes.com/userphotos/90x90/6742804.jpg" alt="" title=""  src="https://images.media-allrecipes.com/ar/spacer.gif" style="display: inline;" />
     </li>
     <li class="cook-info">
         <h4 itemprop="author">nellyshay
@@ -2487,7 +2583,7 @@ Not good at all, odd flavor and texture.        </p>
 
     <aside id="recipe-page-right-rail" class="recipe-page-right-rail four-tabs sticky-ads">
     
-        <right-rail-feed my-feed-data='{&quot;items&quot;:[{&quot;id&quot;:8685,&quot;recipeTitle&quot;:&quot;Richard\u0027s Chicken Breasts&quot;,&quot;imageUrl&quot;:&quot;https://images.media-allrecipes.com/userphotos/300x300/100715.jpg&quot;,&quot;cookId&quot;:15379,&quot;rating&quot;:4.53,&quot;reviewCount&quot;:99,&quot;cookDisplayName&quot;:&quot;CINDER&quot;,&quot;cookThumbnailUrl&quot;:&quot;&quot;,&quot;cookFollowersCount&quot;:0,&quot;cookFavoriteCount&quot;:0,&quot;cookMadeRecipesCount&quot;:0,&quot;videoId&quot;:0,&quot;url&quot;:&quot;https://www.allrecipes.com/Recipe/Richards-Chicken-Breasts/&quot;,&quot;description&quot;:&quot;Aaaah ...rosemary-herbed chicken breasts braised in Marsala wine with  portobello mushrooms and onion, then topped with melting mozzarella.  The cooking technique promises the plumpest, juiciest chicken breasts ever!&quot;,&quot;recommendationSource&quot;:3,&quot;sourceId&quot;:0,&quot;cookHandle&quot;:&quot;&quot;,&quot;cookProfileUrl&quot;:null,&quot;baseSiteUrl&quot;:&quot;https://www.allrecipes.com&quot;,&quot;baseImagesUrl&quot;:&quot;https://images.media-allrecipes.com&quot;,&quot;contentProviderId&quot;:&quot;0&quot;},{&quot;id&quot;:12739,&quot;recipeTitle&quot;:&quot;Crispy Fish&quot;,&quot;imageUrl&quot;:&quot;https://images.media-allrecipes.com/userphotos/300x300/635587.jpg&quot;,&quot;cookId&quot;:24325354,&quot;rating&quot;:4.5,&quot;reviewCount&quot;:197,&quot;cookDisplayName&quot;:&quot;Kristi&quot;,&quot;cookThumbnailUrl&quot;:&quot;&quot;,&quot;cookFollowersCount&quot;:0,&quot;cookFavoriteCount&quot;:0,&quot;cookMadeRecipesCount&quot;:0,&quot;videoId&quot;:3629,&quot;url&quot;:&quot;https://www.allrecipes.com/Recipe/Crispy-Fish/&quot;,&quot;description&quot;:&quot;A fried fish with a spicy and flavorful coating.&quot;,&quot;recommendationSource&quot;:3,&quot;sourceId&quot;:0,&quot;cookHandle&quot;:&quot;Kristi&#187;kristi&quot;,&quot;cookProfileUrl&quot;:null,&quot;baseSiteUrl&quot;:&quot;https://www.allrecipes.com&quot;,&quot;baseImagesUrl&quot;:&quot;https://images.media-allrecipes.com&quot;,&quot;contentProviderId&quot;:&quot;0&quot;}],&quot;referringId&quot;:230347,&quot;isStickyRightRail&quot;:true}'></right-rail-feed>
+        <right-rail-feed my-feed-data='{&quot;items&quot;:[{&quot;id&quot;:20876,&quot;recipeTitle&quot;:&quot;Crustless Spinach Quiche&quot;,&quot;imageUrl&quot;:&quot;https://images.media-allrecipes.com/userphotos/300x300/451789.jpg&quot;,&quot;cookId&quot;:94313,&quot;rating&quot;:4.72,&quot;reviewCount&quot;:2334,&quot;cookDisplayName&quot;:&quot;ANY14TNS&quot;,&quot;cookThumbnailUrl&quot;:&quot;&quot;,&quot;cookFollowersCount&quot;:44,&quot;cookFavoriteCount&quot;:0,&quot;cookMadeRecipesCount&quot;:2,&quot;videoId&quot;:1182,&quot;url&quot;:&quot;https://www.allrecipes.com/Recipe/Crustless-Spinach-Quiche/&quot;,&quot;description&quot;:&quot;A quick and easy crustless spinach quiche recipe that uses eggs, spinach, onion, and Muenster cheese for the perfect quiche in less than an hour.&quot;,&quot;recommendationSource&quot;:3,&quot;sourceId&quot;:0,&quot;cookHandle&quot;:&quot;&quot;,&quot;cookProfileUrl&quot;:null,&quot;baseSiteUrl&quot;:&quot;https://www.allrecipes.com&quot;,&quot;baseImagesUrl&quot;:&quot;https://images.media-allrecipes.com&quot;,&quot;contentProviderId&quot;:&quot;0&quot;},{&quot;id&quot;:169253,&quot;recipeTitle&quot;:&quot;Mayan Couscous&quot;,&quot;imageUrl&quot;:&quot;https://images.media-allrecipes.com/userphotos/300x300/259383.jpg&quot;,&quot;cookId&quot;:2975965,&quot;rating&quot;:4.64,&quot;reviewCount&quot;:142,&quot;cookDisplayName&quot;:&quot;YucatanToday&quot;,&quot;cookThumbnailUrl&quot;:&quot;&quot;,&quot;cookFollowersCount&quot;:2,&quot;cookFavoriteCount&quot;:1,&quot;cookMadeRecipesCount&quot;:0,&quot;videoId&quot;:0,&quot;url&quot;:&quot;https://www.allrecipes.com/Recipe/Mayan-Couscous/&quot;,&quot;description&quot;:&quot;Toasted garlic, jalapeno peppers, and fresh lime juice liven up this Mexican version of couscous salad.&quot;,&quot;recommendationSource&quot;:3,&quot;sourceId&quot;:437,&quot;cookHandle&quot;:&quot;&quot;,&quot;cookProfileUrl&quot;:null,&quot;baseSiteUrl&quot;:&quot;https://www.allrecipes.com&quot;,&quot;baseImagesUrl&quot;:&quot;https://images.media-allrecipes.com&quot;,&quot;contentProviderId&quot;:&quot;0&quot;}],&quot;referringId&quot;:230347,&quot;isStickyRightRail&quot;:true}'></right-rail-feed>
 
 
         <div id="dockedSlots">
@@ -2533,7 +2629,6 @@ Not good at all, odd flavor and texture.        </p>
             <li><a id="footer_twitter" href="https://twitter.com/Allrecipes" title="Twitter" target="_blank" class="svg-icon--social--twitter svg-icon--social--twitter-dims" rel="noopener" data-footer-link-tracking='{"label": "footer > social > twitter"}'></a></li>
             <li><a id="footer_instagram" href="http://instagram.com/allrecipes" title="Instagram" target="_blank" class="svg-icon--social--instagram svg-icon--social--instagram-dims" rel="noopener" data-footer-link-tracking='{"label": "footer > social > instagram"}'></a></li>
             <li><a id="footer_tumblr" href="http://allrecipes.tumblr.com/" title="Tumblr" target="_blank" class="svg-icon--social--tumblr_wh svg-icon--social--tumblr_wh-dims" rel="noopener" data-footer-link-tracking='{"label": "footer > social > tumblr"}'></a></li>
-            <li><a id="footer_googleplus" href="https://plus.google.com/+allrecipes/" title="Google Plus" target="_blank" class="svg-icon--social--google svg-icon--social--google-dims" rel="noopener" data-footer-link-tracking='{"label": "footer > social > google+"}'></a></li>
             <li><a id="footer_stumbleupon" href="http://www.stumbleupon.com/stumbler/Allrecipes" title="StumbleUpon" target="_blank" class="svg-icon--social--stumbleupon svg-icon--social--stumbleupon-dims" rel="noopener" data-footer-link-tracking='{"label": "footer > social > stumbleupon"}'></a></li>
             <li><a id="footer_youtube" href="https://www.youtube.com/user/allrecipes" title="YouTube" target="_blank" class="svg-icon--social--youtube_wh svg-icon--social--youtube_wh-dims" rel="noopener" data-footer-link-tracking='{"label": "footer > social > youtube"}'></a></li>
         </ul>
@@ -2574,12 +2669,60 @@ Not good at all, odd flavor and texture.        </p>
                     <option value="https://www.allrecipes.com/?country=US" rel="noopener" data-footer-link-tracking='{"label": "footer > global community > united states"}'>United States</option>
                 </select>
             </li>
-            <li>&copy; 2018 Allrecipes.com <br />All Rights Reserved </li>
+            <li>&copy; 2020 Allrecipes.com <br />All Rights Reserved </li>
             <li><a id="footer_privacypolicy" href="http://www.meredith.com/legal/privacy" target="_blank" rel="noopener" data-footer-link-tracking='{"label": "footer > california rights"}'>Privacy Policy Your California Rights</a></li>
             <li><a id="footer_eu_privacypolicy" href="http://www.meredith.com/legal/eu-privacy" target="_blank" rel="noopener" data-footer-link-tracking='{"label": "footer > eu privacy policy"}'>EU Privacy Policy</a></li>
             <li><a id="footer_terms" href="http://www.meredith.com/legal/terms" target="_blank" rel="noopener" data-footer-link-tracking='{"label": "footer > terms"}'>Terms of Service</a></li>
             <li><a id="footer_datapolicy" href="http://www.meredith.com/datapolicy.html" target="_blank" rel="noopener" data-footer-link-tracking='{"label": "footer > data policy"}'>Data Policy</a></li>
-            <li><a id="footer_dsar" class="privacy-notification-dsar" href="" target="_blank" rel="noopener" data-footer-link-tracking='{"label": "footer > eu data requests"}'>EU Data Subject Requests</a></li>
+            <li>
+                <a id="footer_dsar" class="privacy-notification-dsar" href="" target="_blank" rel="noopener" data-footer-link-tracking='{"label": "footer > eu data requests"}'>EU Data Subject Requests</a>
+                <!-- EU DSAR link removal start -->
+                <script type="text/javascript">
+                // Find the EU DSAR link by link text.
+                function getEUDSARlink() {
+                    let elem;
+                    const links = document.getElementsByTagName('a');
+                    for (let link of links) {
+                        if (link.innerHTML == 'EU Data Subject Requests') {
+                        elem = link;
+                        break;
+                        }
+                    }
+                return elem;
+                };
+                // Pass EU DSAR link element to the link-hiding function.
+                (function (elem) {
+                    if (elem && typeof elem !== 'undefined') {
+                        const d = window.document;
+                        const now = Math.floor(Date.now() / 1000);
+                        const newYear2020 = 1577836800;
+                        if (now >= newYear2020 || d.location.hash == '#ccpa') {
+                        elem.style.display = 'none';
+                        }
+                    }
+                }(getEUDSARlink()));
+                </script>
+                <!-- EU DSAR link removal end -->
+            </li>
+            <li>
+                <!-- Do Not Sell button start -->
+                <!-- NOTE: OneTrust settings might override the button text. -->
+                <!-- If text link is preferred, change to an <a> tag with the same class. -->
+                <button class="ot-sdk-show-settings">California Do Not Sell</button>
+                <script type="text/javascript">
+                (function () {
+                    const d = window.document;
+                    const now = Math.floor(Date.now() / 1000);
+                    const newYear2020 = 1577836800;
+                    const otLinkClass = '.ot-sdk-show-settings';
+                    if (now < newYear2020 && d.location.hash != '#ccpa') {
+                        const otLink = d.querySelector(otLinkClass);
+                        otLink.style.display = 'none';
+                    }
+                }());
+                </script>
+                <!-- Do Not Sell button end -->
+            </li>
 
                 <li>
                     <!--  Ghostery Inc tag script_ghostery cid: 1333  pid: 282-->
@@ -2650,6 +2793,7 @@ Not good at all, odd flavor and texture.        </p>
         </div>
     </div>
 
+
     
     <div id='ad-footer' class="ad-footer--fixed">
         <div id="div-gpt-mob-adhesive-banner-fixed" data-tier="1"></div>
@@ -2658,21 +2802,32 @@ Not good at all, odd flavor and texture.        </p>
     
 
 
+    <script>
+        // quick script for the pro notification.  Remove after it's gone
+        function showDiv() {
+            document.getElementById('proNotificationModal').style.display = "flex";
+        }
+
+        function closeDiv(e) {
+            document.getElementById(e).style.display = "none";
+        }
+    </script>
 
     <script>
-            window.Toggles={"AdTest":false,"RecipePreferences":true,"AzureRelatedcontentRecipes":true,"RdpRightRailRecommendations":true,"RecipePagePerf":true,"StreamsTest":true,"TastePrefOverlays":true,"RdpTasteCarousel":true,"MonetizedIngredients":false,"FixedGrid":true,"VideoWatchIcon":true,"reCaptcha":false,"Optimizely":false,"WatchVideoRDP":false,"SearchAB":false,"EUCheck":true,"ShowTasteSuperCard":true,"ShowMixedContentSuperCard":true,"Pushly":true};
-        window.dataLayer={"version":"1.0","pageInstanceId":"www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/","externalLinkId":"","page":{"pageInfo":{"pageId":"230347","pageName":"/recipe/230347/roasted-vegetable-and-couscous-salad/","destinationUrl":"https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/","sysEnv":"RD0003FFA86350","variant":"Control","abTestName":"RDP_Video_Step","version":"20180608","issueDate":"11/12/2018 21:09:37","effectiveDate":"11/12/2018 21:09:37","domain":"www.allrecipes.com","parameters":{},"breadcrumbs":"Trusted Brands: Recipes and Tips,United Soybean Board"},"category":{"primaryCategory":"recipes","contentType":"recipe","subContentType":"","adZone":"","adKeys":"status=visitor;oid=;fit=0;r=230347;id=230347;k=[33,68,112,169,173,178,198,199,201,221,241,244,653,720]","contentSource":"420"},"attributes":{"contentId":"230347","title":"Roasted Vegetable and Couscous Salad","country":"USA"}},"event":[],"user":[{"analyticsId":"","segment":{"adStatus":"visitor","visitorType":"anonymous","loginStatus":"no"},"profile":[{"profileInfo":{"profileId":"0","loginType":"None"}}],"magFollower":false}],"newsletter":{"mailingId":"","mailingName":"","mailingDate":"","mailingLinkGroup":"","mailingLinkName":""}};
+            window.Toggles={"AdTest":false,"RecipePreferences":true,"AzureRelatedcontentRecipes":true,"RdpRightRailRecommendations":true,"RecipePagePerf":true,"StreamsTest":true,"TastePrefOverlays":true,"RdpTasteCarousel":true,"MonetizedIngredients":false,"FixedGrid":true,"VideoWatchIcon":true,"reCaptcha":false,"Optimizely":false,"WatchVideoRDP":false,"SearchAB":false,"EUCheck":true,"ShowTasteSuperCard":true,"Pushly":true};
+
+
         var enviromentOmnitureId = 'rdirdallrecipes';
         var pubsub = new Pubsub();
     </script>
-    <script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/analytics.bundled.js' ></script>
+    <script src='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/analytics.bundled.js' ></script>
 
 
 
         <!--  script_analyticstag -->
         <script>
 
-            var segment = {};
+
 
             function completed(whenReady) {
                 document.removeEventListener("DOMContentLoaded", completed);
@@ -2694,13 +2849,12 @@ Not good at all, odd flavor and texture.        </p>
                 var comscoreShim = new ComscoreShim(window.dataLayer, pubsub);
                 var omniShim = new OmnitureShim(window.dataLayer, s, pubsub);
                 var kruxShim = new KruxShim(window.dataLayer, pubsub);
-                var segmentShim = new SegmentShim(window.dataLayer, segment, pubsub);
 
             }
         </script>
 
     <script type="text/javascript">
-        window.Toggles={"AdTest":false,"RecipePreferences":true,"AzureRelatedcontentRecipes":true,"RdpRightRailRecommendations":true,"RecipePagePerf":true,"StreamsTest":true,"TastePrefOverlays":true,"RdpTasteCarousel":true,"MonetizedIngredients":false,"FixedGrid":true,"VideoWatchIcon":true,"reCaptcha":false,"Optimizely":false,"WatchVideoRDP":false,"SearchAB":false,"EUCheck":true,"ShowTasteSuperCard":true,"ShowMixedContentSuperCard":true,"Pushly":true};
+        window.Toggles={"AdTest":false,"RecipePreferences":true,"AzureRelatedcontentRecipes":true,"RdpRightRailRecommendations":true,"RecipePagePerf":true,"StreamsTest":true,"TastePrefOverlays":true,"RdpTasteCarousel":true,"MonetizedIngredients":false,"FixedGrid":true,"VideoWatchIcon":true,"reCaptcha":false,"Optimizely":false,"WatchVideoRDP":false,"SearchAB":false,"EUCheck":true,"ShowTasteSuperCard":true,"Pushly":true};
 
         var enviromentOmnitureId = 'rdirdallrecipes';
 
@@ -2745,10 +2899,10 @@ Not good at all, odd flavor and texture.        </p>
         window.segmentAnalytics.track("Recipe Interaction", biProperties);
     }
     </script>
-<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/main-bottom-recipe.bundled.js' ></script>
-<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/main-bottom-templates-recipe.bundled.js' ></script>
-<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/recipe.bundled.js' ></script>
-<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/recipe-templates.bundled.js' ></script>
+<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/main-bottom-recipe.bundled.js' ></script>
+<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/main-bottom-templates-recipe.bundled.js' ></script>
+<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/recipe.bundled.js' ></script>
+<script src='https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/recipe-templates.bundled.js' ></script>
     <script>
         angular.module("allrecipes").value("userReview", userReview);
 
@@ -2760,7 +2914,7 @@ Not good at all, odd flavor and texture.        </p>
         AR.topTaste =  {"Abbreviation":"sl","DisplayText":"Salad"};
 
         (function () {
-            lazyCss('https://secureimages.allrecipes.com/assets/deployables/v-1.159.0.4887-a/recipe-details-css.bundled.Css');
+            lazyCss('https://secureimages.allrecipes.com/assets/deployables/v-1.191.0.5239/recipe-details-css.bundled.Css');
         })();
     </script>
 
@@ -2768,16 +2922,11 @@ Not good at all, odd flavor and texture.        </p>
     <script>
         angular.module('allrecipes')
             .constant('Constant', {
-                'version': '1.159.0.4887-a'
+                'version': '1.191.0.5239'
             });
     </script>
-        <script type="text/javascript">
-            !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var o=document.getElementsByTagName("script")[0];o.parentNode.insertBefore(n,o);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
-                analytics.load("RnmsxUrjIjM7W62olfjKgJrcsVlxe68V");
-                window.segmentAnalytics.page(segment);
-            }}();
-        </script>
-            <!-- Begin comScore Tag - Part 1 -->
+
+        <!-- Begin comScore Tag - Part 1 -->
         <script id="script_comscore">
             var _comscore = _comscore || [];
             _comscore.push({ c1: "2", c2: "6036305", cs_ucfr: "1" });
@@ -2789,104 +2938,104 @@ Not good at all, odd flavor and texture.        </p>
             })();
         </script>
         <!-- End comScore Tag Part 1-->
-            <script>
-            (function (d) {
-                var e = d.createElement('script');
-                e.src = d.location.protocol + '//tag.bounceexchange.com/2602/i.js';
-                e.async = true;
-                d.getElementsByTagName("head")[0].appendChild(e);
-            }(document));
-        </script>
-                <!-- script_facebookpixel -->
+                    <!-- script_facebookpixel -->
         <script>
             AR.FacebookPixel.init();
         </script>
 
+        <!-- OneTrust Cookies Consent Notice start -->
+        <script type="text/javascript">
+            // Arguments passed to this function:
+            //  OneTrust ID (required): The OneTrust-assigned ID for this site.
+            //  Environment (optional): Test environment is assumed. Specify 'prod' for production.
+            (function (otid, env) {
+                const d = window.document;
+                const otscript = d.createElement('script');
+                const firstscr = d.getElementsByTagName('script')[0];
+                otscript.src = 'https://cdn.cookielaw.org/scripttemplates/otSDKStub-cmp.js';
+                otscript.type = 'text/javascript';
+                otscript.charset = 'UTF-8';
+                otscript.async = true;
+                otscript.setAttribute('data-domain-script', otid + (env != 'prod' ? '-test' : ''));
+                firstscr.parentNode.insertBefore(otscript, firstscr);
+            }('63a0b6bc-e912-4c8d-adfd-3b8a4b698c6c', 'prod'));
+        </script>
+        <script type="text/javascript">
+            function OptanonWrapper() { }
+        </script>
+        <!-- OneTrust Cookies Consent Notice end -->
+
         <!-- Scoby Telemetry snippet script_scobytelemetry -->
-        <script src="https://moprd-cdnservice-uw1.azurewebsites.net/telemetryapi/1/telemetry.js"></script>
+        <script src="https://moprd-cdnservice-uw1.azureedge.net/telemetryapi/1/telemetry.js"></script>
         <!--   End Scoby Telemetry snippet -->
 
         <!-- script_adobetagmanager-->
         <script src="//assets.adobedtm.com/1c2ad567a53f27e563c4dc2c278a904b84dc5fde/satelliteLib-a07d47e4668bf3c3fa98aff5b2fc6d3f1d0981a3-staging.js"></script>
         <script type="text/javascript">_satellite.pageBottom(); // Initialize Adobe DTM</script>
 
-<script type="text/javascript">
-
-// ForeSee Embed Script v2.01
-// DO NOT MODIFY BELOW THIS LINE *****************************************
-;(function (g) {
-    var d = document, am = d.createElement("script"), h = d.head || d.getElementsByTagName("head")[0], fsr = "fsReady",
-        aex = {
-            "src": "https://secureimages.allrecipes.com/ar/foresee/v19.6.3/gateway.min.js",
-            "type": "text/javascript",
-            "async": "true",
-            "data-vendor": "fs",
-            "data-mode": "selfhost",
-            "data-environment": "production",
-            "data-hasssl": "true",
-            "data-client": "allrecipes",
-            "data-codelocation": "https://secureimages.allrecipes.com/ar/foresee/v19.6.3/foresee_assets/code/19.6.3/",
-            "data-isselfhosted": "true",
-            "data-product-assets": "https://secureimages.allrecipes.com/ar/foresee/v19.6.3/foresee_assets/product_assets/",
-            "data-role": "gateway"
-        };
-    for (var attr in aex){am.setAttribute(attr, aex[attr]);}h.appendChild(am); g[fsr] || (g[fsr] = function () {var aT = "__" + fsr + "_stk__";g[aT] = g[aT] || [];g[aT].push(arguments);});
-})(window);
-// DO NOT MODIFY ABOVE THIS LINE *****************************************
-</script>
-            <div class="suppress-foresee"></div>
-
     <div id="dsapp-is-tablet"></div>
 
     <script type="text/javascript">
-        var testStringVersion = 'True';
+    var testStringVersion = 'True';
     </script>
-        <script type="text/javascript">
-            (function(b,r,a,n,c,h,_,s,d,k){if(!b[n]||!b[n]._q){for(;s<_.length;)c(h,_[s++]);d=r.createElement(a);d.async=1;d.src="https://cdn.branch.io/branch-latest.min.js";k=r.getElementsByTagName(a)[0];k.parentNode.insertBefore(d,k);b[n]=h}})(window,document,"script","branch",function(b,r){b[r]=function(){b._q.push([r,arguments])}},{_q:[],_v:1},"addListener applyCode banner closeBanner creditHistory credits data deepview deepviewCta first getCode init link logout redeem referrals removeListener sendSMS setBranchViewData setIdentity track validateCode".split(" "), 0);
-            branch.init('key_live_dcvcpHkps9BjZy4HCivJjpdewCg0PjvK');
-            branch.setBranchViewData({
-                data: {
-                    '$deeplink_path': '/recipe/230347/roasted-vegetable-and-couscous-salad/'
-                }});
-
-            branch.addListener('didShowJourney', function(event) {
-                var journeysBanner = document.getElementById('branch-banner-iframe');
-                if (!journeysBanner || !journeysBanner.style) { // don't run if the journey doesn't exist
-                    return;
-                }
-                var topPosition = journeysBanner.style.top;
-                var position = window.getComputedStyle(journeysBanner).getPropertyValue('position');
-                var bannerHeight = window.getComputedStyle(journeysBanner).getPropertyValue('height');
-                if (topPosition === '0px' && position !== 'fixed') { // if its a top, inline journey
-                    journeysBanner.style.top = '-' + bannerHeight; // shift the banner upward by the height
-                }
-            }); // fires as soon as a journey is being shown
-        </script>
 
 
-    
+
         <script>
             !function (a, e) {
-                // Only show for Desktop
-                if (window.innerWidth <= 1024) {
-                    return;
-                }
-
                 function pushlySetup() {
                     var PushlySDK = window.PushlySDK || [];
-                    function pushly() { PushlySDK.push(arguments) }
+                    function pushly() {
+                        PushlySDK.push(arguments);
+                    }
                     pushly('load', {
                         domainKey: '1s505zJTcPgEUiiSrtvjQaixszhrrYRtqwpR'
                     });
+
+                    var pushly_profile = {};
+                    if (/^(.*;)?\s*hid\s*=\s*[^;]+(.*)?$/.test(document.cookie)) {
+                        var hid = (document.cookie.match('(^|; )hid=([^;]*)') || 0)[2];
+                        if (!!hid) {
+                            pushly_profile['hid'] = hid;
+                        }
+                    }
+
+                    if ('analytics' in window && !!analytics) {
+                        var muid = analytics.user().traits().timeIncId || analytics.user().traits().timeincid;
+                        if (!!muid) {
+                            pushly_profile['muid'] = muid;
+                        }
+                    }
+
+                    if (Object.keys(pushly_profile).length > 0) {
+                        pushly('profile', pushly_profile);
+                    }
                 }
 
-                var t = e.createElement("script");
-                t.src = "https://cdn.p-n.io/pushly-sdk.min.js", t.onload = function () {
-                    pushlySetup();
-                };
+                function insertPushlyManifest() {
 
-                var m = e.getElementsByTagName("script")[0];
-                m.parentNode.insertBefore(t, m)
+                    var l = e.createElement("link");
+                    l.rel = "manifest";
+                    l.href = "/manifest.json";
+
+                    var m = e.getElementsByTagName("link")[0];
+                    m.parentNode.insertBefore(l, m);
+                }
+
+                function insertPushlyScript() {
+
+                    var t = e.createElement("script");
+                    t.src = "https://cdn.p-n.io/pushly-sdk.min.js";
+                    t.onload = function () {
+                        pushlySetup();
+                    };
+
+                    var m = e.getElementsByTagName("script")[0];
+                    m.parentNode.insertBefore(t, m);
+                }
+
+                insertPushlyManifest();
+                insertPushlyScript();
             }(window, document);
         </script>
 </body>
