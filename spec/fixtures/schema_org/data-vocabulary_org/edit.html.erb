@@ -1,0 +1,9 @@
+<div class="row">
+  <div class="col-md-8 box p-5">
+    <h1><%= @food.name.present? ? @food.name : "New food" %></h1>
+    <%= render "form" %>
+  </div>
+
+  <div class="col-md-4">
+  </div>
+</div>

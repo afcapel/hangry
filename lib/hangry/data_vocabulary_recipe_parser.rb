@@ -39,8 +39,5 @@ module Hangry
     def parse_total_time
       recipe_ast.css(".duration").first.content.gsub(/\D/,'').to_i unless recipe_ast.css(".duration").empty?
     end
-
   end
-
 end
-

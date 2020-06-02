@@ -5,6 +5,7 @@ require 'hangry/schema_org_recipe_parser'
 require 'hangry/data_vocabulary_recipe_parser'
 
 require 'hangry/parsers/non_standard/all_recipes_parser'
+require 'hangry/parsers/non_standard/bbc_good_food_parser'
 require 'hangry/parsers/non_standard/bigoven_parser'
 require 'hangry/parsers/non_standard/copykat_parser'
 require 'hangry/parsers/non_standard/eating_well_parser'
@@ -26,6 +27,7 @@ module Hangry
       parser_classes = [
         Parsers::NonStandard::AllRecipesParser,
         Parsers::NonStandard::BigOvenParser,
+        Parsers::NonStandard::BBCGoodFoodParser,
         Parsers::NonStandard::CopykatParser,
         Parsers::NonStandard::EatingWellParser,
         Parsers::NonStandard::EpicuriousParser,
@@ -39,6 +41,6 @@ module Hangry
       parser_classes << DefaultRecipeParser
       parser_classes.detect { |p| p.can_parse?(@html) }
     end
-    
+
   end
 end
