@@ -2,15 +2,15 @@ module Hangry
   class SchemaOrgRecipeParser < RecipeParser
 
     def self.root_selector
-      '[itemtype="http://schema.org/Recipe"]'
+      '[itemtype$="schema.org/Recipe"]'
     end
 
     def self.nutrition_selector
-      '[itemtype="http://schema.org/NutritionInformation"]'
+      '[itemtype$="schema.org/NutritionInformation"]'
     end
 
     def self.ingredient_itemprop
-      :ingredients
+      :recipeIngredient
     end
 
     private
@@ -59,7 +59,11 @@ module Hangry
     end
 
     def parse_ingredients
-      nodes_with_itemprop(self.class.ingredient_itemprop).map(&:content).map { |ingredient|
+      nodes = nodes_with_itemprop(:recipeIngredient)
+      nodes = nodes_with_itemprop(:ingredients) if nodes.empty?
+      nodes = nodes_with_itemprop(:ingredient) if nodes.empty?
+
+      nodes.map(&:content).map { |ingredient|
         # remove newlines and excess whitespace from ingredients
         ingredient
       }.reject(&:blank?)

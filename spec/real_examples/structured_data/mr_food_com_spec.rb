@@ -1,17 +1,17 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative '../../spec_helper'
 
 describe Hangry do
 
   context "mrfood.com recipe" do
-    let(:html) { File.read("spec/fixtures/hrecipe/mrfood.com.html") }
+    let(:html) { File.read("spec/fixtures/structured_data/mrfood.com.html") }
     subject { Hangry.parse(html) }
 
-    its(:author) { should == nil }
-    its(:canonical_url) { should == "http://www.mrfood.com/Slow-Cooker-Recipes/Saucy-Italian-Pot-Roast-4268" }
+    its(:author) { should == "Ginsburg Enterprises" }
+    its(:canonical_url) { should == "https://www.MrFood.com/Slow-Cooker-Recipes/Saucy-Italian-Pot-Roast-4268" }
     its(:cook_time) { should == 320 }
     its(:description) { should == "Try this saucy pot roast over egg noodles, rice, or-for more authentic Italian flavor-polenta. It's a winner whichever way you choose!" }
-    its(:image_url) { should == "http://cf2.primecp.com/images/article_images_v2/82166/Saucy-Italian-Pot-Roast-OR.jpg" }
+    its(:image_url) { should == "https://irepo.primecp.com/2015/09/235934/Saucy-Italian-Pot-Roast_ExtraLarge1000_ID-1183022.jpg?v=1183022" }
     its(:ingredients) {
       should == [
         "1 (8-ounce) package sliced fresh baby Portobello mushrooms",
@@ -42,7 +42,7 @@ describe Hangry do
       }
     end
 
-    its(:instructions) { should == "Place mushrooms and onion in a 6-quart slow cooker; add roast. Sprinkle roast evenly with sauce mix and crushed red pepper. Pour diced tomatoes and tomato sauce over roast.Cover and cook on HIGH setting 5 to 6 hours or until meat is very tender. Remove roast from slow cooker, and cut into large chunks; keep warm.Skim fat from juices in slow cooker; discard fat. Stir together cornstarch and water in a small bowl until smooth; add to juices in slow cooker, stirring until blended.Cover and cook on HIGH setting 20 to 30 more minutes or until mixture is thickened, stirring once. Add roast pieces back to slow cooker. Cover and cook until thoroughly heated." }
+    its(:instructions) { should == "Place mushrooms and onion in a 6-quart slow cooker; add roast. Sprinkle roast evenly with sauce mix and crushed red pepper. Pour diced tomatoes and tomato sauce over roast.\nCover and cook on HIGH setting 5 to 6 hours or until meat is very tender. Remove roast from slow cooker, and cut into large chunks; keep warm.\nSkim fat from juices in slow cooker; discard fat. Stir together cornstarch and water in a small bowl until smooth; add to juices in slow cooker, stirring until blended.\nCover and cook on HIGH setting 20 to 30 more minutes or until mixture is thickened, stirring once. Add roast pieces back to slow cooker. Cover and cook until thoroughly heated." }
 
     its(:prep_time) { should == nil }
     its(:published_date) { should == nil }
@@ -52,4 +52,3 @@ describe Hangry do
   end
 
 end
-

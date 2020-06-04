@@ -1,11 +1,15 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative '../../spec_helper'
 
 describe Hangry do
 
   context "cooking.com recipe" do
-    let(:html) { File.read("spec/fixtures/hrecipe/cooking.com.html") }
+    let(:html) { File.read("spec/fixtures/schema_org/cooking.com.html") }
     subject { Hangry.parse(html) }
+
+    it "should use the correct parser" do
+      expect(Hangry::ParserClassSelecter.new(html).parser_class).to eq(Hangry::SchemaOrgRecipeParser)
+    end
 
     its(:author) { should == nil }
     its(:canonical_url) { should == "http://www.cooking.com/recipes-and-more/recipes/garlic-shrimp-recipe-41.aspx" }
@@ -52,10 +56,5 @@ In a sauté pan over medium heat, warm the olive oil. Add the garlic and red pep
     its(:published_date) { should == nil }
     its(:total_time) { should == 10 }
     its(:yield) { should == "Serves 4" }
-
   end
-
 end
-
-
-

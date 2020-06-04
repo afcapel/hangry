@@ -1,3 +1,4 @@
+require "cgi"
 require 'hangry/canonical_url_parser'
 
 module Hangry
@@ -52,6 +53,8 @@ module Hangry
     def value(object)
       case object
       when NullObject then nil
+      when String then CGI.unescapeHTML(object).delete_prefix('"').delete_suffix('"')
+      when Array then object.collect { |e| value(e) }
       else object
       end
     end
@@ -82,9 +85,5 @@ module Hangry
       # Try to just convert to an integer.. Assuming minutes?
       iso8601_string.to_i
     end
-
   end
-
 end
-
-

@@ -1,5 +1,5 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative '../../../spec_helper'
 
 describe Hangry do
 
@@ -62,5 +62,3 @@ Serve hot.
   end
 
 end
-
-

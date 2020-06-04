@@ -1,5 +1,5 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative '../../spec_helper'
 
 describe Hangry do
 
@@ -7,16 +7,16 @@ describe Hangry do
     let(:html) { File.read("spec/fixtures/schema_org/pillsbury.com.html") }
     subject { Hangry.parse(html) }
 
-    its(:author) { should == nil }
-    its(:canonical_url) { should == "http://www.pillsbury.com/recipes/big-cheesy-pepperoni-pockets/a17766e6-30ce-4a0c-af08-72533bb9b449" }
+    its(:author) { should == "Pillsbury Kitchens" }
+    its(:canonical_url) { should == "https://www.pillsbury.com/recipes/big-cheesy-pepperoni-pockets/a17766e6-30ce-4a0c-af08-72533bb9b449" }
     its(:cook_time) { should == nil }
-    its(:description) { should == "Enjoy these cheesy pepperoni hand pies made using Pillsbury® Big & Flaky dinner rolls – a delicious dinner that’s ready in 25 minutes." }
-    its(:image_url) { should == 'http://s3.amazonaws.com/gmi-digital-library/6e04c5d1-8b2c-41aa-83e3-7dac9cb3ca40.jpg' }
+    its(:description) { should == "Enjoy these cheesy pepperoni hand pies made using Pillsbury™ Big & Flaky or Big & Buttery crescents–a delicious dinner that’s ready in 35 minutes." }
+    its(:image_url) { should == "https://images-gmi-pmc.edge-generalmills.com/b8bebad1-e3d9-4987-9982-d01408d70748.jpg" }
     its(:ingredients) {
       should == [
-        "1 can (12 oz) Pillsbury™ Grands ®! Big & Flaky crescent dinner rolls",
+        "1 can (12 oz) Pillsbury™ Grands!™ Big & Flaky refrigerated crescent dinner rolls or Grands!™ Big & Buttery refrigerated crescent dinner rolls",
         "4 tablespoons marinara sauce",
-        "64 slices pepperoni (5 oz)",
+        "32 slices pepperoni (2.25 oz)",
         "1 1/3 cups shredded mozzarella cheese (5 oz)",
         "1/4 teaspoon Italian seasoning"
       ]
@@ -24,16 +24,16 @@ describe Hangry do
     its(:name) { should == "Big & Cheesy Pepperoni Pockets" }
     its(:nutrition) do
       should == {
-        calories: '590',
-        cholesterol: '55 mg',
-        fiber: '1 g',
-        protein: '21 g',
-        saturated_fat: '15 g',
-        sodium: '1550 mg',
-        sugar: '10 g',
-        total_carbohydrates: '42 g',
-        total_fat: '4 1/2',
-        trans_fat: '1/2 g',
+        calories: "510",
+        cholesterol: "40 mg",
+        fiber: "1 g",
+        protein: "16 g",
+        saturated_fat: "13 g",
+        sodium: "1200 mg",
+        sugar: "10 g",
+        total_carbohydrates: "40 g",
+        total_fat: "4",
+        trans_fat: "1/2 g",
         unsaturated_fat: nil
       }
     end
@@ -49,12 +49,11 @@ Bake 13 to 15 minutes or until golden brown. Immediately remove from cookie shee
       EOS
       should == instructions.strip
     }
-    its(:prep_time) { should == nil }
+    its(:prep_time) { should == 15 }
     its(:published_date) { should == nil }
-    its(:total_time) { should == 25 }
+    its(:total_time) { should == 35 }
     its(:yield) { should == "4" }
 
   end
 
 end
-

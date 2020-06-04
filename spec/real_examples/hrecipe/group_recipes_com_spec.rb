@@ -1,5 +1,5 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative "../../spec_helper"
 
 describe Hangry do
 
@@ -30,7 +30,7 @@ describe Hangry do
       }
     end
 
-    its(:instructions) { 
+    its(:instructions) {
       instructions = <<-eos
 Crust
 Preheat oven to 350°F. Butter a 9” springform pan and line the base with parchment.
@@ -62,4 +62,3 @@ Serve with Raspberry Compote
   end
 
 end
-

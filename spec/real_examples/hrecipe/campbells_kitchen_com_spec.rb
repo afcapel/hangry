@@ -1,5 +1,5 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative '../../spec_helper'
 
 describe Hangry do
 
@@ -41,7 +41,7 @@ describe Hangry do
       }
     end
 
-    its(:instructions) { 
+    its(:instructions) {
       instructions = <<-eos
 1
 Heat the oil in a 12-inch skillet over medium heat.  Add the onion and cook until tender, stirring occasionally.  Stir in the red pepper, concentrated broth and spinach.  Cover and cook until the spinach is wilted.
@@ -59,5 +59,3 @@ Add the beans, cheese and pasta and toss to coat.
   end
 
 end
-
-

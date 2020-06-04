@@ -18,7 +18,7 @@ module Hangry
       return nil unless canonical_url
       full_domain = URI.parse(canonical_url).host
       return nil unless full_domain
-      base_domain_fragments = full_domain.split('.')[-2..-1]
+      base_domain_fragments = full_domain.downcase.split('.')[-2..-1]
       return nil unless base_domain_fragments
       base_domain_fragments.join('.')
     end

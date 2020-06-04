@@ -12,7 +12,7 @@ desc 'Fetch the current versions of all the fixtures'
 task :update_fixtures do
   USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
   [
-    ['https://www.chow.com/recipes/30700-strawberry-rhubarb-pie-with-sour-cream-crust',        'spec/fixtures/schema.org/data-vocabulary_org/chow.com.html'],
+    ['https://www.chow.com/recipes/30700-strawberry-rhubarb-pie-with-sour-cream-crust',        'spec/fixtures/schema.org/chow.com.html'],
     ['https://www.myrecipes.com/recipe/best-carrot-cake-10000000257583/',                      'spec/fixtures/schema.org/data-vocabulary_org/myrecipes.com.html'],
     ['https://www.saveur.com/article/Recipes/Smoked-Trout-Blinis-with-Creme-Fraiche-and-Dill', 'spec/fixtures/schema.org/data-vocabulary_org/saveur.com.html'],
     ['https://www.tarladalal.com/5-Spice-Vegetable-Fried-Rice-8631r',                          'spec/fixtures/schema.org/data-vocabulary_org/tarladalal.com.html'],
@@ -34,7 +34,7 @@ task :update_fixtures do
     ['https://www.epicurious.com/recipes/food/views/grilled-turkey-burgers-with-cheddar-and-smoky-aioli-354289', 'spec/fixtures/hrecipe/epicurious.html'],
     ['https://www.grouprecipes.com/135867/deep-dark-chocolate-cheesecake.html', 'spec/fixtures/hrecipe/grouprecipes.com.html'],
     ['https://homecooking.about.com/od/muffinrecipes/r/blmuff23.htm', 'spec/fixtures/hrecipe/homecooking.about.com.html'],
-    ['https://www.jamieoliver.com/recipes/pork-recipes/neck-fillet-steak/', 'spec/fixtures/hrecipe/jamieoliver.com.html'],
+    ['https://www.jamieoliver.com/recipes/pork-recipes/neck-fillet-steak/', 'spec/fixtures/structured_data/jamieoliver.com.html'],
     ['https://www.mrfood.com/Slow-Cooker-Recipes/Saucy-Italian-Pot-Roast-4268', 'spec/fixtures/hrecipe/mrfood.com.html'],
     ['https://southernfood.about.com/od/collardgreens/r/Kale-Saute-Recipe.htm', 'spec/fixtures/hrecipe/southernfood.about.com.html'],
     ['https://www.tasteofhome.com/recipes/rhubarb-popover-pie', 'spec/fixtures/hrecipe/tasteofhome.com.html'],

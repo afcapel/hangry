@@ -1,10 +1,11 @@
 require "hangry/version"
 require 'hangry/parser_class_selecter'
 require 'hangry/recipe_attribute_cleaner'
-require 'active_support/core_ext/object/blank'
+require 'active_support/all'
 require 'date'
 require 'iso8601'
 require "nokogiri"
+require "loofah"
 
 module Hangry
   RECIPE_ATTRIBUTES = [
@@ -44,6 +45,4 @@ module Hangry
     recipe = parser_class.new(html).parse
     RecipeAttributeCleaner.new(recipe).clean
   end
-
 end
-

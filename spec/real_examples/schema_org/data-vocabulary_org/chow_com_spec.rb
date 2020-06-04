@@ -1,10 +1,10 @@
 # encoding: UTF-8
-require 'hangry'
+require_relative '../../../spec_helper'
 
 describe Hangry do
 
   context "chow.com recipe" do
-    let(:html) { File.read("spec/fixtures/schema_org/data-vocabulary_org/chow.com.html") }
+    let(:html) { File.read("spec/fixtures/schema_org/chow.com.html") }
     subject { Hangry.parse(html) }
 
     its(:author) { should == "Amy Wisniewski" }
@@ -62,5 +62,3 @@ For the pie:\t1Remove the dough from the refrigerator and set it aside at room t
   end
 
 end
-
-

@@ -1,4 +1,4 @@
-require 'hangry'
+require_relative '../../spec_helper'
 require 'rspec/its'
 
 describe Hangry do

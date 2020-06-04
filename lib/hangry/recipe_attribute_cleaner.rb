@@ -31,7 +31,7 @@ module Hangry
         value.map { |string| clean_string(string, options) }
       when Hash
         value.each do |key, string|
-          next unless string
+          next unless string.is_a?(String)
           recipe.nutrition[key] = clean_string(string, options)
         end
       else

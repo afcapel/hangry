@@ -104,4 +104,3 @@ module Hangry
   end
 
 end
-

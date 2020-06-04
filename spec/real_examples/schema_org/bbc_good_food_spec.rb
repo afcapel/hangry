@@ -2,7 +2,7 @@ require_relative '../../spec_helper'
 
 describe Hangry do
 
-  context "allrecipes.com recipe" do
+  context "bbcgoodfood.com recipe" do
     let(:html) { File.read("spec/fixtures/schema_org/bbcgoodfood.html") }
     subject { Hangry.parse(html) }
 
