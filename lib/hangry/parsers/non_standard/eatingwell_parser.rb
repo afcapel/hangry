@@ -4,7 +4,7 @@ module Hangry
       class EatingWellParser < StructuredDataParser
 
         def self.can_parse?(html)
-          canonical_url_matches_domain?(html, 'eatingwell.com')
+          canonical_url_matches_domain?(html, 'eatingwell.com') && super
         end
 
         def parse_yield(value)

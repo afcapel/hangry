@@ -34,7 +34,7 @@ module Hangry
 
     def self.can_parse?(html)
       instance = new(html)
-      instance.recipe_data
+      instance.recipe_data.present?
     end
 
     def parse
