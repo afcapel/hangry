@@ -17,7 +17,7 @@ task :update_fixtures do
     ['https://www.saveur.com/article/Recipes/Smoked-Trout-Blinis-with-Creme-Fraiche-and-Dill', 'spec/fixtures/schema.org/data-vocabulary_org/saveur.com.html'],
     ['https://www.tarladalal.com/5-Spice-Vegetable-Fried-Rice-8631r',                          'spec/fixtures/schema.org/data-vocabulary_org/tarladalal.com.html'],
     ['https://www.taste.com.au/recipes/24586/lemon+melting+moments',                           'spec/fixtures/schema.org/data-vocabulary_org/taste.com.au.html'],
-    ['https://allrecipes.com/Recipe/Roasted-Vegetable-and-Couscous-Salad/Detail.aspx',         'spec/fixtures/schema_org/allrecipes.html'],
+    ['https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/',         'spec/fixtures/schema_org/allrecipes.html'],
     ['https://www.bettycrocker.com/recipes/skillet-chicken-nachos/9bf0c3be-09dd-4b1b-8cf4-a9cfa979b232', 'spec/fixtures/schema_org/betty_crocker.html'],
     ['https://www.copykat.com/2014/12/03/low-fat-scalloped-potatoes/',                          'spec/fixtures/schema_org/copykat.com.html'],
     ['https://www.eatingwell.com/recipes/sauteed_chicken_breasts_with_creamy_chive_sauce.html', 'spec/fixtures/schema_org/eatingwell.com.html'],

@@ -7,38 +7,38 @@ describe Hangry do
     subject { Hangry.parse(html) }
 
     it "should use the correct parser" do
-      expect(Hangry::ParserClassSelecter.new(html).parser_class).to eq(Hangry::Parsers::NonStandard::AllRecipesParser)
+      expect(Hangry::ParserClassSelecter.new(html).parser_class).to eq(Hangry::StructuredDataParser)
     end
 
     its(:author) { should == "United Soybean Board" }
     its(:canonical_url) { should == "https://www.allrecipes.com/recipe/230347/roasted-vegetable-and-couscous-salad/" }
     its(:cook_time) { should == 15 }
-    its(:description) { should == "\"This better-for-you main-dish salad is quick, colorful and full of satisfying texture. To explore a variety of grains, substitute 3 cups cooked regular couscous, brown rice or quinoa.\"" }
-    its(:image_url) { should == "https://images.media-allrecipes.com/userphotos/250x250/987785.jpg" }
+    its(:description) { should == "This better-for-you main-dish salad is quick, colorful and full of satisfying texture. To explore a variety of grains, substitute 3 cups cooked regular couscous, brown rice or quinoa." }
+    its(:image_url) { should == "https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fimages.media-allrecipes.com%2Fuserphotos%2F1050717.jpg" }
     its(:ingredients) {
       should == [
-        '3 cups broccoli florets, cut into 1/2-inch pieces',
-        '1 red bell pepper, cut into 1-inch squares',
-        '1 1/2 cups red onion, peeled and cut into 1/4-inch slices',
-        '6 tablespoons soybean oil, divided (often labeled "vegetable oil")',
-        '1/2 tablespoon ground black pepper, divided',
-        '1/2 teaspoon salt, divided',
-        '1 1/2 cups dry giant Israeli couscous',
-        '2 tablespoons balsamic vinegar'
+        "3 cups broccoli florets, cut into 1/2-inch pieces",
+        "1 red bell pepper, cut into 1-inch squares",
+        "1 ½ cups red onion, peeled and cut into 1/4-inch slices",
+        "6 tablespoons soybean oil, divided (often labeled \"vegetable oil\")",
+        "½ tablespoon ground black pepper, divided",
+        "½ teaspoon salt, divided",
+        "1 ½ cups dry giant Israeli couscous",
+        "2 tablespoons balsamic vinegar"
       ]
     }
     its(:name) { should == "Roasted Vegetable and Couscous Salad" }
     its(:nutrition) do
       should == {
-        calories: '305 calories;',
-        cholesterol: '0',
-        fiber: nil,
-        protein: '6.8',
-        saturated_fat: nil,
-        sodium: '217',
-        sugar: nil,
-        total_carbohydrates: '38.3',
-        total_fat: '14.2',
+        calories: "305 calories",
+        cholesterol: "0 mg",
+        fiber: "4.3 g",
+        protein: "6.8 g",
+        saturated_fat: "2.2 g",
+        sodium: "217 mg",
+        sugar: "4 g",
+        total_carbohydrates: "38.3 g",
+        total_fat: "14.2 g",
         trans_fat: nil,
         unsaturated_fat: nil
       }
@@ -57,7 +57,7 @@ You may substitute 3 cups cooked regular couscous, brown rice or quinoa.
     its(:prep_time) { should == 15 }
     its(:published_date) { should == nil }
     its(:total_time) { should == 30 }
-    its(:yield) { should == "6" }
+    its(:yield) { should == nil }
 
   end
 
